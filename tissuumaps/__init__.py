@@ -28,7 +28,8 @@ from flask import Flask
 log = logging.getLogger()
 log.setLevel(logging.INFO)
 
-SLIDE_DIR = "/Users/rugorgi/Documents/images"
+SLIDE_DIR = "/mnt/e/documents"
+print(os. getcwd())
 DEFAULT_PROJECT = False
 SLIDE_CACHE_SIZE = 60
 DEEPZOOM_FORMAT = "jpeg"
