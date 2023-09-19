@@ -395,6 +395,8 @@ dataUtils.getAllH5Data = async function(data_id, alldrops){
         // Tooltip
         data_obj["_tooltip_fmt"]=inputs["tooltip_fmt"].value;
         
+        data_obj["_stroke_width"]=2.5;  // TODO
+        data_obj["_no_fill"]=false;     // TODO
         data_obj["_no_outline"]=(radios["_no_outline"].checked ? true : false);
 
         //this function veryfies if a tree with these features exist and doesnt recreate it
@@ -711,6 +713,7 @@ dataUtils.makeQuadTrees = function(data_id) {
     var groupByCol=data_obj["_gb_col"]
     var groupByColsName=data_obj["_gb_name"]
     var markerData=data_obj["_processeddata"];
+    var coordFactor=data_obj["_coord_factor"];
 
     // Check if we can skip recomputing the last generated quadtree
     const lastInputs = dataUtils._quadtreesLastInputs;
@@ -729,10 +732,10 @@ dataUtils.makeQuadTrees = function(data_id) {
     for (let i = 0; i < numMarkers; ++i) indexData[i] = i;
 
     var x = function (d) {
-        return markerData[xselector][d];
+        return markerData[xselector][d] * coordFactor;
     };
     var y = function (d) {
-        return markerData[yselector][d];
+        return markerData[yselector][d] * coordFactor;
     };
     if (dataUtils._quadtreesEnabled) console.time("Generate quadtrees");
     if (groupByCol) {

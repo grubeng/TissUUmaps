@@ -2,6 +2,7 @@
  * @namespace regionUtils
  * @classdesc Region utilities, everything to do with 
  * regions or their calculations goes here  
+ * @property {String}   regionUtils._regionMode - Can be null, "points", "rectangles", "freehand", "brush", "selection"
  * @property {Bool}     regionUtils._isNewRegion - if _isNewRegion is true then a new region will start 
  * @property {Bool}     regionUtils._currentlyDrawing - Boolean to specify if a region is currently being drawn
  * @property {Number}   regionUtils._currentRegionId - Keep then number of drawn regions and also let them be the id, 
@@ -17,6 +18,7 @@
  * @property {Object[]} regionUtils._edgeLists - Data structure used for rendering regions with WebGL
  * @property {Object[]} regionUtils._regionToColorLUT - LUT for storing color and visibility per object ID
  * @property {Object{}} regionUtils._regionIDToIndex - Mapping between region ID (string) and object ID (index)
+ * @property {Object{}} regionUtils._regionIndexToID - Mapping between object ID (index) and region ID (string)
 */
 regionUtils = {
     _isNewRegion: true,
@@ -31,10 +33,10 @@ regionUtils = {
     _epsilonDistance: 0.004,
     _regions: {},
     _drawingclass: "drawPoly",
-    _maxRegionsInMenu: 200,
     _edgeLists: [],
     _regionToColorLUT: [],
-    _regionIDToIndex: {}
+    _regionIDToIndex: {},
+    _regionIndexToID: {}
 }
 
 /** 
@@ -42,13 +44,95 @@ regionUtils = {
 regionUtils.resetManager = function () {
     var drawingclass = regionUtils._drawingclass;
     d3.select("." + drawingclass).remove();
+    drawingclass = "_brushRegion";
+    d3.select("." + drawingclass).remove();
+    
     regionUtils._isNewRegion = true;
     regionUtils._currentPoints = null;
 }
+/**
+ * 
+ * @param {OpenSeadragon.point} coordinates
+ * @returns {Number} index of the layer that contains the coordinates
+ */
+regionUtils.getLayerFromCoord = function (coordinates) {
+    var op = tmapp["object_prefix"];
+    var viewer = tmapp[op + "_viewer"];
+    for (var i = viewer.world.getItemCount()-1; i >= 0; i--) {
+        let tiledImage = viewer.world.getItemAt(i);
+        let imageCoord = tiledImage.viewportToImageCoordinates(
+            coordinates.x, coordinates.y, true
+        );
+        if (imageCoord.x > 0 && imageCoord.y > 0 &&
+            imageCoord.x < tiledImage.getContentSize().x && imageCoord.y < tiledImage.getContentSize().y) {
+                return i;
+        }
+    }
+    return 0;
+}
+/**
+ * Get viewport coordinates from image coordinates for a given layer
+ * @param {Object} globalPoints 
+ * @param {Number} layerIndex
+ * @returns viewportPoints
+ */
+regionUtils.globalPointsToViewportPoints = function (globalPoints, layerIndex) {
+    var op = tmapp["object_prefix"];
+    var viewer = tmapp[op + "_viewer"];
+    var viewportPoints = [];
+    for (var i = 0; i < globalPoints.length; i++) {
+        var subregion = [];
+        for (var j = 0; j < globalPoints[i].length; j++) {
+            var polygon = [];
+            for (var k = 0; k < globalPoints[i][j].length; k++) {
+                let x = globalPoints[i][j][k].x;
+                let y = globalPoints[i][j][k].y;
+                let tiledImage = viewer.world.getItemAt(layerIndex);
+                let imageCoord = tiledImage.imageToViewportCoordinates(
+                    x, y, true
+                );
+                polygon.push({ "x": imageCoord.x, "y": imageCoord.y });
+            }
+            subregion.push(polygon);
+        }
+        viewportPoints.push(subregion);
+    }
+    return viewportPoints;
+}
+
+/**
+ * Get viewport coordinates from image coordinates for a given layer
+ * @param {Object} globalPoints 
+ * @param {Number} layerIndex
+ * @returns viewportPoints
+ */
+regionUtils.viewportPointsToGlobalPoints = function (viewportPoints, layerIndex) {
+    var op = tmapp["object_prefix"];
+    var viewer = tmapp[op + "_viewer"];
+    var globalPoints = [];
+    for (var i = 0; i < viewportPoints.length; i++) {
+        var subregion = [];
+        for (var j = 0; j < viewportPoints[i].length; j++) {
+            var polygon = [];
+            for (var k = 0; k < viewportPoints[i][j].length; k++) {
+                let x = viewportPoints[i][j][k].x;
+                let y = viewportPoints[i][j][k].y;
+                let tiledImage = viewer.world.getItemAt(layerIndex);
+                let imageCoord = tiledImage.viewportToImageCoordinates(
+                    x, y, true
+                );
+                polygon.push({ "x": imageCoord.x, "y": imageCoord.y });
+            }
+            subregion.push(polygon);
+        }
+        globalPoints.push(subregion);
+    }
+    return globalPoints;
+}
+
 /** 
  *  When a region is being drawn, this function takes care of the creation of the region */
 regionUtils.manager = function (event) {
-    //console.log(event);
     var drawingclass = regionUtils._drawingclass;
     //if we come here is because overlayUtils.drawRegions mode is on
     // No matter what we have to get the normal coordinates so
@@ -60,14 +144,11 @@ regionUtils.manager = function (event) {
     var OSDsvg=d3.select(eventSource.element).select("svg").select("g");
     var stringOSDVname=eventSource.element.parentElement.parentElement.id;
     var overlay=stringOSDVname.substr(0,stringOSDVname.indexOf('_'));*/
-    //console.log(overlay);
     var OSDviewer = tmapp[tmapp["object_prefix"] + "_viewer"];
     var normCoords = OSDviewer.viewport.pointFromPixel(event.position);
     //var canvas=tmapp[tmapp["object_prefix"]+"_svgov"].node();
     var canvas = overlayUtils._d3nodes[tmapp["object_prefix"] + "_regions_svgnode"].node();
-    //console.log(normCoords);
     var regionobj;
-    //console.log(d3.select(event.originalEvent.target).attr("is-handle"));
     var strokeWstr = regionUtils._polygonStrokeWidth / tmapp["ISS_viewer"].viewport.getZoom();
 
     if (regionUtils._isNewRegion) {
@@ -77,6 +158,8 @@ regionUtils.manager = function (event) {
         regionUtils._isNewRegion = false;
         //give a new id
         regionUtils._currentRegionId += 1;
+        //set corresponding layer index
+        regionUtils._currentLayerIndex = regionUtils.getLayerFromCoord(normCoords);
         var idregion = regionUtils._currentRegionId;
         //this is out first point for this region
         var startPoint = [normCoords.x, normCoords.y];
@@ -127,20 +210,14 @@ regionUtils.closePolygon = function () {
     var regionid = 'region' + regionUtils._currentRegionId.toString();
     d3.select("." + drawingclass).remove();
     regionsobj = d3.select(canvas);
-
-    var hexcolor = "#FF0000"; //overlayUtils.randomColor("hex");    
-
+    
     regionUtils._isNewRegion = true;
     regionUtils._currentPoints.push(regionUtils._currentPoints[0]);
-    regionUtils.addRegion([[regionUtils._currentPoints]], regionid, hexcolor);
+    regionUtils.addRegion([[regionUtils._currentPoints]], regionid, null, "", regionUtils._currentLayerIndex);
     regionUtils._currentPoints = null;
 
     regionUtils.updateAllRegionClassUI();
-    if(overlayUtils._regionOperations){
-        regionUtils.addRegionOperationsRow(regionid)
-    }
-    $(document.getElementById("regionClass-")).collapse("show");
-
+    regionUtils.highlightRegion(regionid);
 }
 
 /** 
@@ -293,7 +370,8 @@ regionUtils.geoJSON2regions = async function (geoJSONObjects) {
         if (regionId in regionUtils._regions) {
             regionId += "_" + (Math.random() + 1).toString(36).substring(7);
         }
-        regionUtils.addRegion(coordinates, regionId, hexColor, geoJSONObjClass);
+        //TODO: collectionIndex from modal if multiple layers
+        regionUtils.addRegion(coordinates, regionId, hexColor, geoJSONObjClass, 0);
         regionUtils._regions[regionId].regionName = regionName;
         if (document.getElementById(regionId + "_class_ta")) {
             document.getElementById(regionId + "_class_ta").value = geoJSONObjClass;
@@ -336,70 +414,78 @@ regionUtils.distance = function (p1, p2) {
 /** 
  *  @param {Number[]} points Array of 2D points in normalized coordinates
  *  @summary Create a region object and store it in the regionUtils._regions container */
-regionUtils.addRegion = function (points, regionid, color, regionClass) {
+regionUtils.addRegion = function (points, regionid, color, regionClass, collectionIndex) {
+    if (collectionIndex == undefined) collectionIndex = 0;
     if (!regionClass) regionClass = "";
+    const regionClassID = HTMLElementUtils.stringToId("region_" + regionClass);
+    if (!color) {
+        const color_picker = document.getElementById(`regionUI_${regionClassID}_color`);
+        if (color_picker) {
+            color = color_picker.value;
+        } else {
+            color = "#ff0000";
+        }
+    }
     var op = tmapp["object_prefix"];
     var viewer = tmapp[tmapp["object_prefix"] + "_viewer"]
     //var imageWidth = OSDViewerUtils.getImageWidth();
     var region = { 
         "id": regionid, 
-        "points": [], 
         "globalPoints": [], 
         "regionName": regionid, 
         "regionClass": regionClass, 
         "barcodeHistogram": [],
-        "visibility": true
+        "visibility": true,
+        "collectionIndex": collectionIndex
     };
     region.len = points.length;
-    var _xmin = parseFloat(points[0][0][0][0]), 
-        _xmax = parseFloat(points[0][0][0][0]),
-        _ymin = parseFloat(points[0][0][0][1]),
-        _ymax = parseFloat(points[0][0][0][1]);
-    var objectPointsArray = [];
     for (var i = 0; i < region.len; i++) {
-        subregion = [];
-        globalSubregion = [];
+        let globalSubregion = [];
         for (var j = 0; j < points[i].length; j++) {
-            polygon = [];
-            globalPolygon = [];
+            let globalPolygon = [];
             for (var k = 0; k < points[i][j].length; k++) {
                 let x = parseFloat(points[i][j][k][0]);
                 let y = parseFloat(points[i][j][k][1]);
                 
-                if (x > _xmax) _xmax = x;
-                if (x < _xmin) _xmin = x;
-                if (y > _ymax) _ymax = y;
-                if (y < _ymin) _ymin = y;
-                polygon.push({ "x": x, "y": y });
-                let tiledImage = viewer.world.getItemAt(0);
+                let tiledImage = viewer.world.getItemAt(collectionIndex);
                 let imageCoord = tiledImage.viewportToImageCoordinates(
                     x, y, true
                 );
                 globalPolygon.push({ "x": imageCoord.x, "y": imageCoord.y });
             }
-            subregion.push(polygon);
             globalSubregion.push(globalPolygon);
         }
-        region.points.push(subregion);
         region.globalPoints.push(globalSubregion);
     }
-    region._xmin = _xmin, region._xmax = _xmax, region._ymin = _ymin, region._ymax = _ymax;
-    let tiledImage = viewer.world.getItemAt(0);
-    let _min_imageCoord = tiledImage.viewportToImageCoordinates(
-        _xmin,
-        _ymin
-    );
-    let _max_imageCoord = tiledImage.viewportToImageCoordinates(
-        _xmax,
-        _ymax
-    );
-    region._gxmin = _min_imageCoord.x, region._gxmax = _max_imageCoord.x, region._gymin = _min_imageCoord.y, region._gymax = _max_imageCoord.y;
     region.polycolor = color;
 
+    regionUtils.updateBbox(region);
     regionUtils._regions[regionid] = region;
     regionUtils._regions[regionid].associatedPoints=[];
 }
 
+/**
+ * Update bounding box region._gxmin, region._gxmax, region._gymin, region._gymax
+ * from region.globalPoints
+ */
+regionUtils.updateBbox=function(region) {
+    region._gxmin = Infinity;
+    region._gxmax = -Infinity;
+    region._gymin = Infinity;
+    region._gymax = -Infinity;
+    for (var i = 0; i < region.globalPoints.length; i++) {
+        for (var j = 0; j < region.globalPoints[i].length; j++) {
+            for (var k = 0; k < region.globalPoints[i][j].length; k++) {
+                var x = region.globalPoints[i][j][k].x;
+                var y = region.globalPoints[i][j][k].y;
+                region._gxmin = Math.min(region._gxmin, x);
+                region._gxmax = Math.max(region._gxmax, x);
+                region._gymin = Math.min(region._gymin, y);
+                region._gymax = Math.max(region._gymax, y);
+            }
+        }
+    }
+}
 
 /**
  * @deprecated Kept for backward compatibility
@@ -435,8 +521,8 @@ regionUtils.globalPointInPath=function(x,y,path,tmpPoint) {
             const markerData = dataUtils.data[options.dataset]["_processeddata"];
             const columns = dataUtils.data[options.dataset]["_csv_header"];
             for (const d of node.data) {
-                const x = markerData[xselector][d];
-                const y = markerData[yselector][d];
+                const x = markerData[xselector][d] * options.coordFactor;
+                const y = markerData[yselector][d] * options.coordFactor;
                 if (x >= x0 && x < x3 && y >= y0 && y < y3) {
                     // Note: expanding each point into a full object will be
                     // very inefficient memory-wise for large datasets, so
@@ -484,8 +570,8 @@ regionUtils.searchTreeForPointsInRegion = function (quadtree, x0, y0, x3, y3, re
     let countsInsideRegion = 0;
     let pointsInside = [];
     for (d of pointInBbox) {
-        const x = d[xselector];
-        const y = d[yselector];
+        const x = d[xselector] * options.coordFactor;
+        const y = d[yselector] * options.coordFactor;
         if (regionUtils._pointInRegion(x, y, regionid, imageBounds)) {
             countsInsideRegion += 1;
             pointsInside.push(d);
@@ -501,15 +587,78 @@ regionUtils.searchTreeForPointsInRegion = function (quadtree, x0, y0, x3, y3, re
 regionUtils.fillAllRegions=function(){
     glUtils._regionFillRule = glUtils._regionFillRule == "never" ? "nonzero" : "never";
     
-    let regionIcon = document.getElementById('ISS_fillregions_icon');
+    let regionIcon = document.getElementById('region_fill_button');
     if (glUtils._regionFillRule != "never") {
-        regionIcon.classList.remove("bi-circle");
-        regionIcon.classList.add("bi-check-circle");
+        regionIcon.classList.remove("btn-light");
+        regionIcon.classList.add("btn-primary");
     } else {
-        regionIcon.classList.remove("bi-check-circle");
-        regionIcon.classList.add("bi-circle");
+        regionIcon.classList.remove("btn-primary");
+        regionIcon.classList.add("btn-light");
     }
     glUtils.draw();    
+}
+
+/** Zoom to a set of regions */
+regionUtils.zoomToRegions=function(regions){
+    console.assert(regions.length > 0, "No regions to zoom to")
+    // Get bounding box of all regions by looking at region._gxmin, region._gxmax, region._gymin, region._gymax
+    let x0 = Infinity;
+    let x3 = -Infinity;
+    let y0 = Infinity;
+    let y3 = -Infinity;
+    for (const region of regions) {
+        const image = tmapp["ISS_viewer"].world.getItemAt(region.collectionIndex);
+        const viewportRect = image.imageToViewportRectangle(
+            region._gxmin, region._gymin, region._gxmax - region._gxmin, region._gymax - region._gymin
+        );
+        x0 = Math.min(x0, viewportRect.x);
+        y0 = Math.min(y0, viewportRect.y);
+        x3 = Math.max(x3, viewportRect.x + viewportRect.width);
+        y3 = Math.max(y3, viewportRect.y + viewportRect.height);
+    }
+    // Zoom to bounding box
+    // Convert image coordinates to viewport coordinates
+    const OSDRect = new OpenSeadragon.Rect(
+        x0, y0, x3 - x0, y3 - y0
+    );
+    tmapp["ISS_viewer"].viewport.fitBounds(OSDRect);
+}
+
+/** 
+ * @param {String} regionid String id of region to delete
+ * @summary Given a region id, split region.globalPoints in separate regions */
+regionUtils.splitRegion = function (regionid) {
+    const region = regionUtils._regions[regionid];
+    const globalPoints = region.globalPoints;
+    const globalPointsLength = globalPoints.length;
+    for (let i = 0; i < globalPointsLength; i++) {
+        const newRegionId = regionid + "_" + i;
+        regionUtils.addRegion(
+            regionUtils.objectToArrayPoints(
+                regionUtils.globalPointsToViewportPoints(
+                    [globalPoints[i]], 
+                    region.collectionIndex
+                )
+            ),
+            newRegionId,
+            region.polycolor,
+            region.regionClass,
+            region.collectionIndex
+        );
+    }
+    regionUtils.deleteRegion(regionid);
+}
+
+/** 
+ * @param {String} regionid String id of region to delete
+ * @summary Given a region id, fill holes in region.globalPoints */
+regionUtils.fillHolesRegion = function (regionid) {
+    const region = regionUtils._regions[regionid];
+    for (let i = 0; i < region.globalPoints.length; i++) {
+        region.globalPoints[i] = [region.globalPoints[i][0]];
+    }
+    regionUtils.deSelectRegion(regionid);
+    regionUtils.selectRegion(region);
 }
 
 /** 
@@ -524,19 +673,8 @@ regionUtils.deleteRegion = function (regionid, skipUpdateAllRegionClassUI) {
         var rPanelHist = document.getElementById(op + regionid + "_tr_hist");
         rPanelHist.parentElement.removeChild(rPanelHist);
     }
-    if(!overlayUtils._regionOperations) return; 
-    regionUtils.deleteRegionOperationRows(regionid);  
-    if(!regionUtils._selectedRegions[regionid]) return; 
-    const regionClass = regionUtils._selectedRegions[regionid].regionClass;
     regionUtils.deSelectRegion(regionid); 
-    const remainingClassRegions = Object.values(regionUtils._regions).filter((region) => region.regionClass === regionClass);
-    if(remainingClassRegions.length === 0){
-        regionUtils.deleteRegionOperationsAccordion(regionClass);
-    }
-    regionUtils.updateAllRegionClassUI();
-    //if(!skipUpdateAllRegionClassUI) {
-    //    regionUtils.updateAllRegionClassUI();
-    //}
+    if (!skipUpdateAllRegionClassUI) regionUtils.updateAllRegionClassUI();
 }
 /** 
  * @param {String} regionid String id of region to delete
@@ -551,15 +689,33 @@ regionUtils.deleteAllRegions = function () {
     var regionsPanel = document.getElementById("regionAccordions");
     regionsPanel.innerText = "";
     regionUtils._regions = {};
+    regionUtils.updateAllRegionClassUI();
 }
 regionUtils.updateAllRegionClassUI = function () {
     setTimeout(()=>{
+        // get the collapse status of all elements ".collapse_button_regionClass"
+        // and save in a list of uncollapsed element ids}
+        let uncollapsedElements = [];
+        let collapseButtons = document.getElementsByClassName("collapse_button_regionClass");
+        for (let i = 0; i < collapseButtons.length; i++) {
+            if (collapseButtons[i].getAttribute("aria-expanded") == "true") {
+                uncollapsedElements.push(collapseButtons[i].getAttribute("data-bs-target"));
+            }
+        }
         let regionUI = interfaceUtils._rGenUIFuncs.createTable();
         menuui=interfaceUtils.getElementById("markers-regions-panel");
-        menuui.classList.remove("d-none")
         menuui.innerText="";
 
         menuui.appendChild(regionUI);
+        // uncollapse all elements in uncollapsedElements:
+        for (let i = 0; i < uncollapsedElements.length; i++) {
+            // set style transition to none:
+            $(uncollapsedElements[i]).css("transition", "none");
+            $(uncollapsedElements[i]).collapse("show");
+            // put back transition to default:
+            $(uncollapsedElements[i]).css("transition", "");
+        }
+        menuui.classList.remove("d-none")
     },10);
     glUtils.updateRegionDataTextures();
     glUtils.updateRegionLUTTextures();
@@ -570,13 +726,14 @@ regionUtils.updateAllRegionClassUI = function () {
  *  @param {String} regionid Region identifier
  *  @summary Change the region properties like color, class name or region name */
 regionUtils.changeRegion = function (regionid) {
+    const escapedRegionID = HTMLElementUtils.stringToId(regionid)
     if (document.getElementById(regionid + "_name_ta")) {
         var op = tmapp["object_prefix"];
-        var rPanel = document.getElementById(op + regionid + "_tr");
-        var rPanel_hist = document.getElementById(op + regionid + "_tr_hist");
-        if (regionUtils._regions[regionid].regionClass != document.getElementById(regionid + "_class_ta").value) {
-            if (document.getElementById(regionid + "_class_ta").value) {
-                regionUtils._regions[regionid].regionClass = document.getElementById(regionid + "_class_ta").value;
+        var rPanel = document.getElementById(op + escapedRegionID + "_tr");
+        var rPanel_hist = document.getElementById(op + escapedRegionID + "_tr_hist");
+        if (regionUtils._regions[regionid].regionClass != document.getElementById(escapedRegionID + "_class_ta").value) {
+            if (document.getElementById(escapedRegionID + "_class_ta").value) {
+                regionUtils._regions[regionid].regionClass = document.getElementById(escapedRegionID + "_class_ta").value;
                 //classID = HTMLElementUtils.stringToId(regionUtils._regions[regionid].regionClass);
                 //regionUtils.addRegionClassUI (regionUtils._regions[regionid].regionClass)
                 //$(rPanel).detach().appendTo('#markers-regions-panel-' + classID)
@@ -590,12 +747,12 @@ regionUtils.changeRegion = function (regionid) {
             }
             regionUtils.updateAllRegionClassUI();
         }
-        if (document.getElementById(regionid + "_name_ta").value) {
-            regionUtils._regions[regionid].regionName = document.getElementById(regionid + "_name_ta").value;
+        if (document.getElementById(escapedRegionID + "_name_ta").value) {
+            regionUtils._regions[regionid].regionName = document.getElementById(escapedRegionID + "_name_ta").value;
         } else {
             regionUtils._regions[regionid].regionName = regionid;
         }
-        var newregioncolor = document.getElementById(regionid + "_color_input").value;
+        var newregioncolor = document.getElementById(escapedRegionID + "_color_input").value;
         regionUtils._regions[regionid].polycolor = newregioncolor;
     }
 }
@@ -649,7 +806,8 @@ regionUtils.analyzeRegion = function (regionid) {
                     "globalCoords":true,
                     "xselector":dataUtils.data[uid]["_X"],
                     "yselector":dataUtils.data[uid]["_Y"],
-                    "dataset":uid
+                    "dataset":uid,
+                    "coordFactor":dataUtils.data[uid]["_coord_factor"]
                 });
             if(pointsInside.length>0){
                 pointsInside.forEach(function(p){
@@ -662,99 +820,54 @@ regionUtils.analyzeRegion = function (regionid) {
         }
     }
     regionUtils._regions[regionid].barcodeHistogram.sort(compare);
-
-    var rPanel = document.getElementById(op + regionid + "_tr_hist");
-    if (rPanel) {
-        var rpanelbody = rPanel.getElementsByClassName("region-histogram")[0];
-        histodiv = document.getElementById(regionid + "_histogram");
-        if (histodiv) {
-            histodiv.parentNode.removeChild(histodiv);
-        }
-
-        var div = HTMLElementUtils.createElement({ kind: "div", id: regionid + "_histogram" });
-        var histogram = regionUtils._regions[regionid].barcodeHistogram;
-        var table = div.appendChild(HTMLElementUtils.createElement({
-            kind: "table",
-            extraAttributes: {
-                class: "table table-striped",
-                style: "overflow-y: auto;"
-            }
-        }));
-        thead = HTMLElementUtils.createElement({kind: "thead"});
-        thead.innerHTML = `<tr>
-        <th scope="col">Key</th>
-        <th scope="col">Name</th>
-        <th scope="col">Count</th>
-        </tr>`;
-        tbody = HTMLElementUtils.createElement({kind: "tbody"});
-        table.appendChild(thead);
-        table.appendChild(tbody);
-
-        for (var i in histogram) {
-            var innerHTML = "";
-            innerHTML += "<td>" + histogram[i].key + "</td>";
-            innerHTML += "<td>" + histogram[i].name + "</td>";
-            innerHTML += "<td>" + histogram[i].count + "</td>";
-            tbody.appendChild(HTMLElementUtils.createElement({
-                kind: "tr",
-                "innerHTML": innerHTML
-            }));
-        }
-        rpanelbody.appendChild(div);
-        $(rPanel).show();
-    }
 }
 /** 
  *  regionUtils */
-regionUtils.regionsOnOff = function () {
-    // Toggle off other region modes
-    if (overlayUtils._freeHandDrawRegions) {
-        regionUtils.freeHandRegionsOnOff();
-    }
-    overlayUtils._drawRegions = !overlayUtils._drawRegions;
-    var op = tmapp["object_prefix"];
-    let regionIcon = document.getElementById(op + '_drawregions_icon');
-    if (overlayUtils._drawRegions) {
-        regionIcon.classList.remove("bi-circle");
-        regionIcon.classList.add("bi-check-circle");
-        // Set region drawing cursor and show hint
-        regionUtils.setViewerCursor("crosshair")
-        regionUtils.showHint("Click to draw regions")
-    } else {
-        regionUtils.resetManager();
-        regionIcon.classList.remove("bi-check-circle");
-        regionIcon.classList.add("bi-circle");
-         // Reset cursor and hide hint
-        regionUtils.setViewerCursor("auto")
-        regionUtils.hideHint();
-    }
-}
-
-regionUtils.freeHandRegionsOnOff = function () {
-    // Toggle off other region modes
-    if (overlayUtils._drawRegions) {
-        regionUtils.regionsOnOff();
-    }
-    overlayUtils._freeHandDrawRegions = !overlayUtils._freeHandDrawRegions;
-    const op = tmapp["object_prefix"];
-    let freeHandButtonIcon = document.getElementById(
-        op + "_draw_regions_free_hand_icon"
+regionUtils.setMode = function (mode) {
+    let selectButtonIcon = document.getElementById(
+        "region_selection_button"
     );
-    if (overlayUtils._freeHandDrawRegions) {
-        freeHandButtonIcon.classList.remove("bi-circle");
-        freeHandButtonIcon.classList.add("bi-check-circle");
-        // Set region drawing cursor and show hint
-        regionUtils.setViewerCursor("crosshair");
-        regionUtils.showHint("Drag the mouse to draw regions");
-    } else {
-        regionUtils.resetManager();
-        freeHandButtonIcon.classList.remove("bi-check-circle");
-        freeHandButtonIcon.classList.add("bi-circle");
-        // Reset cursor and hide hint
-        regionUtils.setViewerCursor("auto");
-        regionUtils.hideHint();
+    let mainButtonIcon = document.getElementById(
+        "region_drawing_button"
+    );
+    let mainButtonIconDropdown = document.getElementById(
+        "region_drawing_button_dropdown"
+    );
+    // Toggle off other region modes
+    selectButtonIcon.classList.add("btn-light");
+    selectButtonIcon.classList.remove("btn-primary");
+    mainButtonIcon.classList.add("btn-light");
+    mainButtonIcon.classList.remove("btn-primary");
+    mainButtonIconDropdown.classList.add("btn-light");
+    mainButtonIconDropdown.classList.remove("btn-primary");
+    
+    mode = (mode == regionUtils._regionMode) ? null : mode;
+
+    regionUtils._regionMode = mode;
+    if (mode == "select") {
+        selectButtonIcon.classList.remove("btn-light");
+        selectButtonIcon.classList.add("btn-primary");
     }
-};
+    else if (mode != null) {
+        mainButtonIcon.classList.remove("btn-light");
+        mainButtonIcon.classList.add("btn-primary");
+        mainButtonIconDropdown.classList.remove("btn-light");
+        mainButtonIconDropdown.classList.add("btn-primary");
+    }
+    if (mode == "points" || mode == "select" || mode == null) {
+        // Reset cursor
+        regionUtils.setViewerCursor("auto")
+    }
+    else if (mode == "brush") {
+        // Set region drawing cursor
+        regionUtils.setViewerCursor("none")
+    }
+    else if (mode == "free" || mode == "rectangle" || mode == "ellipse") {
+        // Set region drawing cursor 
+        regionUtils.setViewerCursor("crosshair")
+    }
+    regionUtils.resetManager();
+}
 
 regionUtils.freeHandManager = function (event) {
     function onCanvasRelease(){
@@ -772,7 +885,11 @@ regionUtils.freeHandManager = function (event) {
         );
         // If there is only one point, there is no region to be drawn, 
         // reset and stop here
-        if (regionUtils._currentPoints < 1) { 
+        if (!regionUtils._currentPoints) { 
+          regionUtils.resetManager(); 
+          return;
+        }
+        if (regionUtils._currentPoints.length < 2) { 
           regionUtils.resetManager(); 
           return;
         }
@@ -810,6 +927,8 @@ regionUtils.freeHandManager = function (event) {
           regionUtils._currentPoints = [];
           regionUtils._isNewRegion = false;
           regionUtils._currentRegionId += 1;
+          regionUtils._currentLayerIndex = regionUtils.getLayerFromCoord(normCoords);
+          
           const idregion = regionUtils._currentRegionId;
           const startPoint = [normCoords.x, normCoords.y];
           regionUtils._currentPoints.push(startPoint);
@@ -866,6 +985,482 @@ regionUtils.freeHandManager = function (event) {
     // Finish region drawing when mouse is released
     OSDViewer.addHandler("canvas-release", onCanvasRelease);
 };
+regionUtils.rectangleManager = function (event) {
+    var last_rectangle = [];
+    function onCanvasRelease(){
+        // Get OSDViewer
+        const OSDViewer = tmapp[tmapp["object_prefix"] + "_viewer"];
+        // Remove mouse dragging handler
+        OSDViewer.removeHandler(
+          "canvas-drag",
+          createRegionFromCanvasDrag
+        );
+        // Remove release handler
+        OSDViewer.removeHandler(
+          "canvas-release",
+          onCanvasRelease
+        );
+        // If x1 == x2 or y1 == y2, there is no region to be drawn
+        // reset and stop here
+        if (last_rectangle[0] == last_rectangle[2] ||
+            last_rectangle[1] == last_rectangle[3]) {
+          regionUtils.resetManager(); 
+          return;
+        }
+        // Close the region if initial point and final point are close enough
+        regionUtils.closePolygon();
+        // If initial point and final point are not close enough, reset
+        regionUtils.resetManager();
+    }
+    
+      function createRegionFromCanvasDrag(event) {
+        const drawingclass = regionUtils._drawingclass;
+        // Get OSDViewer
+        const OSDviewer = tmapp[tmapp["object_prefix"] + "_viewer"];
+        const canvas =
+          overlayUtils._d3nodes[tmapp["object_prefix"] + "_regions_svgnode"].node();
+        // Block viewer panning
+        event.preventDefaultAction = true;
+        // Get region's next point coordinates from event position 
+        const normCoords = OSDviewer.viewport.pointFromPixel(event.position);
+        // Get stroke width depending on currently applied zoom to image
+        const strokeWstr =
+          regionUtils._polygonStrokeWidth / tmapp["ISS_viewer"].viewport.getZoom();
+        let regionobj;
+        if (regionUtils._isNewRegion) {
+          last_rectangle = [normCoords.x, normCoords.y, normCoords.x, normCoords.y];
+          regionUtils._isNewRegion = false;
+          regionUtils._currentRegionId += 1;
+          regionUtils._currentLayerIndex = regionUtils.getLayerFromCoord(normCoords);
+          regionobj = d3.select(canvas).append("g").attr("class", drawingclass);
+        } 
+        const idregion = regionUtils._currentRegionId;
+        const nextpoint = [normCoords.x, normCoords.y];
+        last_rectangle[2] = normCoords.x;
+        last_rectangle[3] = normCoords.y;
+        let boundingBox = last_rectangle;
+        if (event.shift) {
+            const width = Math.abs(boundingBox[0] - boundingBox[2]);
+            const height = Math.abs(boundingBox[1] - boundingBox[3]);
+            const maxSize = Math.max(width, height);
+            boundingBox = [
+                last_rectangle[0],
+                last_rectangle[1],
+                last_rectangle[0] + maxSize,
+                last_rectangle[1] + maxSize
+            ];
+        }
+        if (event.originalEvent.ctrlKey) {
+            const width = Math.abs(boundingBox[0] - boundingBox[2]);
+            const height = Math.abs(boundingBox[1] - boundingBox[3]);
+            boundingBox = [
+                last_rectangle[0] - width, 
+                last_rectangle[1] - height,
+                last_rectangle[0] + width,
+                last_rectangle[1] + height
+            ]
+        }
+        regionUtils._currentPoints = [
+            [boundingBox[0], boundingBox[1]],
+            [boundingBox[0], boundingBox[3]],
+            [boundingBox[2], boundingBox[3]],
+            [boundingBox[2], boundingBox[1]],
+            [boundingBox[0], boundingBox[1]]
+        ]
+        
+        regionobj = d3.select("." + drawingclass);
+        regionobj.select("polyline").remove();
+        regionobj
+          .append("polyline")
+          .attr("points", regionUtils._currentPoints)
+          .style("fill", "none")
+          .attr("stroke-width", strokeWstr)
+          .attr("stroke", "#ff0000")
+          .attr("class", "region" + idregion);
+    };  
+    // Get OSDViewer
+    const OSDViewer = tmapp[tmapp["object_prefix"] + "_viewer"];
+    // Add region creation handler while mouse is pressed.
+    // Capture the drag events to get the mouse position as the
+    // left button.
+    // Build the region based on the position of those events.
+    OSDViewer.addHandler("canvas-drag", createRegionFromCanvasDrag);
+    // Finish region drawing when mouse is released
+    OSDViewer.addHandler("canvas-release", onCanvasRelease);
+};
+regionUtils.ellipseManager = function (event) {
+    var last_ellipse = [];
+    function onCanvasRelease(){
+        // Get OSDViewer
+        const OSDViewer = tmapp[tmapp["object_prefix"] + "_viewer"];
+        // Remove mouse dragging handler
+        OSDViewer.removeHandler(
+          "canvas-drag",
+          createRegionFromCanvasDrag
+        );
+        // Remove release handler
+        OSDViewer.removeHandler(
+          "canvas-release",
+          onCanvasRelease
+        );
+        // If x1 == x2 or y1 == y2, there is no region to be drawn
+        // reset and stop here
+        if (last_ellipse[0] == last_ellipse[2] ||
+            last_ellipse[1] == last_ellipse[3]) {
+          regionUtils.resetManager(); 
+          return;
+        }
+        // Close the region if initial point and final point are close enough
+        regionUtils.closePolygon();
+        // If initial point and final point are not close enough, reset
+        regionUtils.resetManager();
+    }
+    function generateEllipseCoordinates(last_ellipse, nb_points) {
+        const [x1, y1, x2, y2] = last_ellipse;
+        const centerX = (x1 + x2) / 2;
+        const centerY = (y1 + y2) / 2;
+        const radiusX = Math.abs(x2 - x1) / 2;
+        const radiusY = Math.abs(y2 - y1) / 2;
+      
+        const coordinates = [];
+      
+        for (let i = 0; i <= nb_points; i++) {
+          const angle = (i / nb_points) * 2 * Math.PI;
+          const x = centerX + radiusX * Math.cos(angle);
+          const y = centerY + radiusY * Math.sin(angle);
+          coordinates.push([x, y]);
+        }
+      
+        return coordinates;
+    }
+    
+      function createRegionFromCanvasDrag(event) {
+        const drawingclass = regionUtils._drawingclass;
+        // Get OSDViewer
+        const OSDviewer = tmapp[tmapp["object_prefix"] + "_viewer"];
+        const canvas =
+          overlayUtils._d3nodes[tmapp["object_prefix"] + "_regions_svgnode"].node();
+        // Block viewer panning
+        event.preventDefaultAction = true;
+        // Get region's next point coordinates from event position 
+        const normCoords = OSDviewer.viewport.pointFromPixel(event.position);
+        // Get stroke width depending on currently applied zoom to image
+        const strokeWstr =
+          regionUtils._polygonStrokeWidth / tmapp["ISS_viewer"].viewport.getZoom();
+        let regionobj;
+        if (regionUtils._isNewRegion) {
+          last_ellipse = [normCoords.x, normCoords.y, normCoords.x, normCoords.y];
+          regionUtils._isNewRegion = false;
+          regionUtils._currentRegionId += 1;
+          regionUtils._currentLayerIndex = regionUtils.getLayerFromCoord(normCoords);
+          regionobj = d3.select(canvas).append("g").attr("class", drawingclass);
+        } 
+        const idregion = regionUtils._currentRegionId;
+        const nextpoint = [normCoords.x, normCoords.y];
+        last_ellipse[2] = normCoords.x;
+        last_ellipse[3] = normCoords.y;
+        let boundingBox = last_ellipse;
+        if (event.shift) {
+            const width = Math.abs(boundingBox[0] - boundingBox[2]);
+            const height = Math.abs(boundingBox[1] - boundingBox[3]);
+            const maxSize = Math.max(width, height);
+            boundingBox = [
+                last_ellipse[0],
+                last_ellipse[1],
+                last_ellipse[0] + maxSize,
+                last_ellipse[1] + maxSize
+            ];
+        }
+        if (event.originalEvent.ctrlKey) {
+            const width = Math.abs(boundingBox[0] - boundingBox[2]);
+            const height = Math.abs(boundingBox[1] - boundingBox[3]);
+            boundingBox = [
+                last_ellipse[0] - width, 
+                last_ellipse[1] - height,
+                last_ellipse[0] + width,
+                last_ellipse[1] + height
+            ]
+        }
+        regionUtils._currentPoints = generateEllipseCoordinates(boundingBox, 50);
+        
+        regionobj = d3.select("." + drawingclass);
+        regionobj.select("polyline").remove();
+        regionobj
+          .append("polyline")
+          .attr("points", regionUtils._currentPoints)
+          .style("fill", "none")
+          .attr("stroke-width", strokeWstr)
+          .attr("stroke", "#ff0000")
+          .attr("class", "region" + idregion);
+    };  
+    // Get OSDViewer
+    const OSDViewer = tmapp[tmapp["object_prefix"] + "_viewer"];
+    // Add region creation handler while mouse is pressed.
+    // Capture the drag events to get the mouse position as the
+    // left button.
+    // Build the region based on the position of those events.
+    OSDViewer.addHandler("canvas-drag", createRegionFromCanvasDrag);
+    // Finish region drawing when mouse is released
+    OSDViewer.addHandler("canvas-release", onCanvasRelease);
+};
+regionUtils.brushHover = function (event) {
+    // Get OSDViewer
+    const OSDViewer = tmapp[tmapp["object_prefix"] + "_viewer"];
+    const canvas =
+      overlayUtils._d3nodes[tmapp["object_prefix"] + "_regions_svgnode"].node();
+    const drawingclass = "_brushRegion";
+    const normCoords = OSDViewer.viewport.pointFromPixel(event.position);
+    regionobj = d3.select("." + drawingclass);
+    regionobj.remove();
+
+    regionobj = d3.select(canvas).append("g").attr("class", drawingclass);
+    // Draw a circle in the position of the first point of the region
+    regionobj
+    .append("circle")
+    .attr(
+        "r",
+        (0.2 * regionUtils._handleRadius) /
+        tmapp["ISS_viewer"].viewport.getZoom()
+    )
+    .attr("fill", "#ff000088")
+    .attr("stroke", "#ff0000")
+    .attr("stroke-width", 0)
+    .attr("class", "regionBrush")
+    .attr("id", "regionBrush")
+    .attr(
+        "transform",
+        "translate(" +
+        normCoords.x.toString() +
+        "," +
+        normCoords.y.toString() +
+        ") scale(" +
+        "1" +
+        ")"
+    )
+    const regions = Object.values(regionUtils._selectedRegions);
+    if (regions.length == 1) {
+        // add a plus sign in a tspan next to the circle cursor
+        regionobj
+        .append("text")
+        .attr(
+            "transform",
+            "translate(" +
+            normCoords.x.toString() +
+            "," +
+            normCoords.y.toString() +
+            ") scale(" +
+            "1" +
+            ")"
+        )
+        .attr("fill", "#000000")
+        .attr("stroke", "#000000")
+        .attr("stroke-width", 0)
+        .attr("class", "regionBrush")
+        .attr("id", "regionBrush")
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "middle")
+        .attr("font-size", (0.02 /
+            tmapp["ISS_viewer"].viewport.getZoom()).toString() + "px")
+        .attr("font-weight", "bold")
+        .text((event.originalEvent.shiftKey)?"-":"+");     
+    }
+    return 
+}
+regionUtils.brushManager = function (event) {
+    function onCanvasRelease(){
+        // Get OSDViewer
+        const OSDViewer = tmapp[tmapp["object_prefix"] + "_viewer"];
+        // Remove mouse dragging handler
+        OSDViewer.removeHandler(
+          "canvas-drag",
+          createRegionFromCanvasDrag
+        );
+        // Remove release handler
+        OSDViewer.removeHandler(
+          "canvas-release",
+          onCanvasRelease
+        );
+        // If there is only one point, there is no region to be drawn, 
+        // reset and stop here
+        if (!regionUtils._currentPoints) { 
+          regionUtils.resetManager(); 
+          return;
+        }
+        if (regionUtils._currentPoints.length < 1) { 
+          regionUtils.resetManager(); 
+          return;
+        }
+        // Close the region if initial point and final point are close enough
+        var canvas = overlayUtils._d3nodes[tmapp["object_prefix"] + "_regions_svgnode"].node();
+        var drawingclass = regionUtils._drawingclass;
+        var regionid = (regionUtils._editedRegion)?regionUtils._editedRegion.id:'region' + regionUtils._currentRegionId.toString();
+        var regionclass = (regionUtils._editedRegion)?regionUtils._editedRegion.regionClass:'';
+        d3.select("." + drawingclass).remove();
+        regionsobj = d3.select(canvas);
+
+        regionUtils._isNewRegion = true;
+        regionUtils.addRegion(regionUtils._currentPoints, regionid, null, regionclass, regionUtils._currentLayerIndex);
+        regionUtils._currentPoints = null;
+    
+        regionUtils.updateAllRegionClassUI();
+        $(document.getElementById("regionClass-")).collapse("show");
+    
+        // If initial point and final point are not close enough, reset
+        regionUtils.resetManager();
+        if (regionUtils._editedRegion) {
+            regionUtils.selectRegion(regionUtils._regions[regionid])
+        }
+        regionUtils.highlightRegion(regionid);
+    }
+    function getBrushShape(x1,y1,x2,y2,brushSize){
+        // Get coordinates of the perimeter around two circles of radius brushSize
+        // and centers in x1,y1 and x2,y2, merged with the rectangle joining the
+        // two circles
+        
+        // First we get coordinates of circle 1, circle 2 and rectangle:
+        // Circle 1
+        
+        const brushCircle1 = d3.range(0, 360, 20).map(function (t) {
+            return {
+                X:x1 + brushSize * Math.cos((t * Math.PI) / 180),
+                Y:y1 + brushSize * Math.sin((t * Math.PI) / 180),
+            };
+        });
+        // Circle 2
+        const brushCircle2 = d3.range(0, 360, 20).map(function (t) {
+            return {
+                X:x2 + brushSize * Math.cos((t * Math.PI) / 180),
+                Y:y2 + brushSize * Math.sin((t * Math.PI) / 180),
+            };
+        });
+        // Rectangle of width 2*brushSize and length the distance between the two points
+        // rotated to join perfectly the two circles
+        const brushRectangle = [
+            {
+                X:x1 + brushSize * Math.cos(Math.atan2(y2 - y1, x2 - x1) - Math.PI / 2),
+                Y:y1 + brushSize * Math.sin(Math.atan2(y2 - y1, x2 - x1) - Math.PI / 2),
+            },
+            {
+                X:x1 + brushSize * Math.cos(Math.atan2(y2 - y1, x2 - x1) + Math.PI / 2),
+                Y:y1 + brushSize * Math.sin(Math.atan2(y2 - y1, x2 - x1) + Math.PI / 2),
+            },
+            {
+                X:x2 + brushSize * Math.cos(Math.atan2(y2 - y1, x2 - x1) + Math.PI / 2),
+                Y:y2 + brushSize * Math.sin(Math.atan2(y2 - y1, x2 - x1) + Math.PI / 2),
+            },
+            {
+                X:x2 + brushSize * Math.cos(Math.atan2(y2 - y1, x2 - x1) - Math.PI / 2),
+                Y:y2 + brushSize * Math.sin(Math.atan2(y2 - y1, x2 - x1) - Math.PI / 2),
+            }
+        ];
+        // Merge all of them
+        const mergedPoints = regionUtils.clipperPolygons(
+            [[[brushCircle1]],
+            [[brushCircle2]],
+            [[brushRectangle]]],
+            "union"
+          );
+        return mergedPoints;
+      }
+
+      function createRegionFromCanvasDrag(event) {
+        
+        const drawingclass = regionUtils._drawingclass;
+        // Get OSDViewer
+        const OSDviewer = tmapp[tmapp["object_prefix"] + "_viewer"];
+        const canvas =
+          overlayUtils._d3nodes[tmapp["object_prefix"] + "_regions_svgnode"].node();
+        // Block viewer panning
+        event.preventDefaultAction = true;
+        // Get region's next point coordinates from event position 
+        const normCoords = OSDviewer.viewport.pointFromPixel(event.position);
+        if (regionUtils._lastPoints) {
+            if (regionUtils.distance([normCoords.x, normCoords.y], [regionUtils._lastPoints.x, regionUtils._lastPoints.y]) < regionUtils._epsilonDistance / tmapp["ISS_viewer"].viewport.getZoom()) {
+                return;
+            }
+        }
+
+        // Get stroke width depending on currently applied zoom to image
+        const strokeWstr =
+            regionUtils._polygonStrokeWidth / tmapp["ISS_viewer"].viewport.getZoom();
+        let regionobj;
+        const regions = Object.values(regionUtils._selectedRegions);
+        
+        if (regionUtils._isNewRegion) {
+            if (regions.length == 1) {
+                regionUtils._currentPoints = 
+                regionUtils.objectToArrayPoints(
+                    regionUtils.globalPointsToViewportPoints(
+                        regions[0].globalPoints, 
+                        regions[0].collectionIndex
+                    )
+                );
+                regionUtils._isNewRegion = false;
+                regionUtils._currentLayerIndex = regions[0].collectionIndex;
+                regionUtils._editedRegion = regions[0];
+                regionUtils.deleteRegion(regions[0].id, true);
+            } else {
+                regionUtils._currentPoints = [];
+                regionUtils._isNewRegion = false;
+                regionUtils._currentRegionId += 1;
+                regionUtils._editedRegion = null;
+                regionUtils._currentLayerIndex = regionUtils.getLayerFromCoord(normCoords);
+            }
+            regionUtils._lastPoints = normCoords
+        } 
+        const idregion = regionUtils._currentRegionId;
+        const operation = (!event.shift) ? "union" : "difference";
+        const previousPolygon = regionUtils.regionToUpperCase(
+            regionUtils.arrayToObjectPoints(regionUtils._currentPoints)
+        );
+        const brushShape = getBrushShape(
+            regionUtils._lastPoints.x,
+            regionUtils._lastPoints.y,
+            normCoords.x,
+            normCoords.y,
+            (0.2 * regionUtils._handleRadius) /
+                tmapp["ISS_viewer"].viewport.getZoom()
+        );
+        if (previousPolygon.length == 0) {
+            regionUtils._currentPoints = regionUtils.objectToArrayPoints(
+                regionUtils.regionToLowerCase(brushShape)
+            )
+        }
+        else {
+            regionUtils._currentPoints = regionUtils.objectToArrayPoints(
+                regionUtils.regionToLowerCase(
+                    regionUtils.clipperPolygons(
+                        [
+                            previousPolygon,
+                            brushShape
+                        ], operation
+                    )
+                )
+            );
+        }
+        regionUtils._lastPoints = normCoords;
+        regionobj = d3.select("." + drawingclass);
+        regionobj.remove();
+        regionobj = d3.select(canvas).append("g").attr("class", drawingclass);
+        regionobj
+        .append("path")
+        .attr("d", regionUtils.pointsToPath(regionUtils.arrayToObjectPoints(regionUtils._currentPoints)))
+        .style("fill", "none")
+        .attr("stroke-width", strokeWstr)
+        .attr("stroke", "#ff0000")
+        .attr("class", "region" + idregion);
+    };
+    // Get OSDViewer
+    const OSDViewer = tmapp[tmapp["object_prefix"] + "_viewer"];
+    // Add region creation handler while mouse is pressed.
+    // Capture the drag events to get the mouse position as the
+    // left button.
+    // Build the region based on the position of those events.
+    OSDViewer.addHandler("canvas-drag", createRegionFromCanvasDrag);
+    // Finish region drawing when mouse is released
+    OSDViewer.addHandler("canvas-release", onCanvasRelease);
+    createRegionFromCanvasDrag(event);
+};
 
 /**
  * 
@@ -879,45 +1474,6 @@ regionUtils.setViewerCursor = function(cursorType){
     OSDViewerElement.style.cursor = cursorType
 }
 
-/**
- * 
- * @param {string} message 
- * @summary Show a hint in the regions tab  
- */
-regionUtils.showHint = function(message){
-    // Get region buttons container
-    const regionsButtonsContainer = document.getElementById("regionButtons")
-    // Check if banner is already visible, if not, create it 
-    let hintBanner = document.getElementById("regionHintBanner")
-    if(!hintBanner) {
-        hintBanner = document.createElement("div")
-        hintBanner.setAttribute("id", "regionHintBanner")
-    } 
-    // Set banner styles
-    hintBanner.innerText = message
-    hintBanner.style.width = "100%"
-    hintBanner.style.textAlign = "center"
-    hintBanner.style.background = "rgba(239,239,240, 1)"
-    hintBanner.style.padding = "8px 0 8px 0"
-    hintBanner.style.margin = "8px 0 8px 0"
-    hintBanner.style.color = "green"
-    // Add banner to region buttons container
-    regionsButtonsContainer.append(hintBanner)
-}
-
-/**
- * 
- * @summary Hide regions tab hint 
- */
-regionUtils.hideHint = function(){
-    // Get hint element
-    const hintBanner = document.getElementById("regionHintBanner")
-    // If banner does not exist, return
-    if(!hintBanner) return 
-    // Remove hint element
-    hintBanner.remove()
-}
-
 /** 
  *  regionUtils */
 regionUtils.exportRegionsToJSON = function () {
@@ -929,9 +1485,22 @@ regionUtils.importRegionsFromJSON = function () {
     regionUtils.JSONToRegions();
 }
 
-regionUtils.pointsInRegionsToCSV=function(){
+regionUtils.pointsInRegionsToCSV= async function(){
+    /* we loop through all regions in regionUtils._regions and compute the points in each region
+    using regionUtils.analyzeRegion.
+    */
+    let analyzeAll = await interfaceUtils.confirm(
+        "Do you want to run the analysis on all regions? This may take a while.<br/><br/> \
+        If not, the exported file will only contain previously analyzed regions.",
+        "Analyze all regions?"
+    )
+    if (analyzeAll) { 
+        for (let r in regionUtils._regions){
+            regionUtils.analyzeRegion(r);
+        }
+    }
     var alldata=[]
-    for (r in regionUtils._regions){
+    for (let r in regionUtils._regions){
         var regionPoints=regionUtils._regions[r].associatedPoints;
         regionUtils._regions[r].associatedPoints.forEach(function(p){
             p.regionName=regionUtils._regions[r].regionName
@@ -1043,9 +1612,6 @@ regionUtils.JSONValToRegions= async function(jsonVal){
     var regions=jsonVal;
     await regionUtils.geoJSON2regions(regions);
     regionUtils.updateAllRegionClassUI();
-    if(overlayUtils._regionOperations){
-        regionUtils.updateRegionOperationsListUI();
-    }
     $('[data-bs-target="#markers-regions-project-gui"]').tab('show');
 }
 
@@ -1063,11 +1629,13 @@ regionUtils._generateEdgeListsForDrawing = function(imageBounds, numScanlines = 
     }
 
     regionUtils._regionIDToIndex = {};
+    regionUtils._regionIndexToID = {};
 
     let objectID = 0;
     for (let regionID of Object.keys(regionUtils._regions)) {
         const region = regionUtils._regions[regionID];
         regionUtils._regionIDToIndex[regionID] = objectID;  // Update mapping
+        regionUtils._regionIndexToID[objectID] = regionID;  // ...
 
         for (let subregion of region.globalPoints) {
             for (let points of subregion) {
@@ -1231,6 +1799,59 @@ regionUtils._pointInRegion = function(px, py, regionID, imageBounds) {
         isInside = windingNumber != 0;
     }
     return isInside;
+}
+
+
+// Find region under point. Returns a key to the regionUtils_regions dict if a
+// region is found, otherwise null. If multiple regions overlap at the point,
+// the key of the last one in the draw order shall be returned.
+regionUtils._findRegionByPoint = function(px, py, imageBounds) {
+    console.assert(imageBounds.length == 4);
+    const numScanlines = regionUtils._edgeLists.length;
+    const scanlineHeight = imageBounds[3] / numScanlines;
+    const scanline = Math.floor(py / scanlineHeight);
+
+    if (scanline < 0 || scanline >= numScanlines) return null;  // Outside image
+    const edgeList = regionUtils._edgeLists[scanline][0];
+    const numItems = edgeList.length / 4;
+
+    let offset = 2;  // Offset starts at two because of occupancy mask
+    let objectID = offset < numItems ? (edgeList[offset * 4 + 2] - 1) : -1;
+
+    let foundRegion = -1;
+    while (offset < numItems) {
+        console.assert(regionUtils._regionToColorLUT.length > (objectID * 4));
+        const visible = regionUtils._regionToColorLUT[objectID * 4 + 3];
+
+        // (TODO Add bounding box test to check if object can be skipped)
+
+        // Compute winding number from all edges stored for the object ID
+        let windingNumber = 0;
+        while (offset < numItems && (edgeList[offset * 4 + 2] - 1) == objectID) {
+            const count = edgeList[offset * 4 + 3];
+            for (let i = 0; i < count; ++i) {
+                const x0 = edgeList[(offset + 1 + i) * 4 + 0];
+                const y0 = edgeList[(offset + 1 + i) * 4 + 1];
+                const x1 = edgeList[(offset + 1 + i) * 4 + 2];
+                const y1 = edgeList[(offset + 1 + i) * 4 + 3];
+
+                if (Math.min(y0, y1) <= py && py < Math.max(y0, y1)) {
+                    const t = (py - y0) / (y1 - y0 + 1e-5);
+                    const x = x0 + (x1 - x0) * t;
+                    const weight = Math.sign(y1 - y0);
+                    windingNumber += ((x - px) > 0.0 ? weight : 0);
+                }
+            }
+            offset += count + 1;  // Position pointer at next path
+        }
+
+        // Apply non-zero fill rule for inside test
+        const isInside = windingNumber != 0;
+        if (isInside && visible) { foundRegion = objectID; }
+
+        objectID = offset < numItems ? (edgeList[offset * 4 + 2] - 1) : -1;
+    }
+    return foundRegion >= 0 ? regionUtils._regionIndexToID[foundRegion] : null;
 }
 
 

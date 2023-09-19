@@ -2375,7 +2375,8 @@ interfaceUtils.prompt = function (text, value, title, type) {
     })
 }
 
-interfaceUtils.generateModal = function(title, content, buttons, uid, noClose) {
+interfaceUtils.generateModal = function(title, content, buttons, uid, noClose, noBackdrop) {
+    if (!noBackdrop) noBackdrop = false;
     if (!noClose) noClose = false;
     if (!uid) uid = "default";
     modalWindow = document.getElementById(uid + "_modal");
@@ -2411,6 +2412,11 @@ interfaceUtils.generateModal = function(title, content, buttons, uid, noClose) {
     modalWindowButtons.appendChild(buttons);
 
     modalWindow = document.getElementById(`${uid}_modal`);
+    if (noBackdrop) {
+        modalWindow.addEventListener('shown.bs.modal', function (event) {
+            $('.modal-backdrop.show').css('opacity', '0');
+        });
+    }
     $(modalWindow).modal({backdrop: 'static',keyboard: false});
     $(modalWindow).modal("show");
     modalWindow.getElementsByClassName("modal-dialog")[0].style.left = "0";
@@ -2437,7 +2443,6 @@ interfaceUtils.generateModal = function(title, content, buttons, uid, noClose) {
 
 interfaceUtils.closeModal = async function (modalWindow) {
     for (var i = 0; i < 40; i++) {
-        console.log(i, modalWindow, modalWindow.classList);
         if (modalWindow.classList.contains("show")) {
             break;
         }
@@ -2474,7 +2479,6 @@ interfaceUtils.createDownloadDropdown = function(downloadRow, innerText, callbac
         // innerText: innerText
         class: "select2-select select2-select_" + random_select2_id
     }
-    console.log("dropdownOptions", dropdownOptions);
     var DownloadDropdown = HTMLElementUtils.selectTypeDropDown(paramSelect);
     DownloadDropdown.setAttribute("data-placeholder", "Select from list (" + dropdownOptions.length + " items)")
     DownloadDropdown.style.width = "100%";
@@ -2498,7 +2502,6 @@ interfaceUtils.createDownloadDropdown = function(downloadRow, innerText, callbac
             cache: true,
             transport: function(params, success, failure) {
                 let pageSize = 100;
-                console.log("params",params);
                 let term = (params.data.term || '').toLowerCase();
                 let page = (params.data.page || 1);
                 
@@ -2817,10 +2820,45 @@ interfaceUtils._rGenUIFuncs={}
 /** 
 * @param {HTMLEvent} event event that triggered function
 * @summary Delete all trace of a tab including datautils.data.key*/
+interfaceUtils._rGenUIFuncs.checkboxToEye=function(checkBox){
+    let button1 = HTMLElementUtils.createElement(
+        {"kind":"div", extraAttributes:{"data-uid":checkBox.id,"class":"btn btn-light btn-sm mx-1"}}
+    );
+    button1.innerHTML = "<i class='bi bi-eye'></i>";
+    button1.addEventListener("click",function(event) {
+        checkBox.checked = !checkBox.checked;
+        checkBox.dispatchEvent(new Event('input'));
+        if (checkBox.checked) {
+            button1.innerHTML = "<i class='bi bi-eye'></i>";
+        }
+        else {
+            button1.innerHTML = "<i class='bi bi-eye-slash-fill'></i>";
+        }
+    });
+    checkBox.parentNode.insertBefore(button1, checkBox.nextSibling);
+    checkBox.style.display = "none";
+    Object.defineProperty(checkBox, "checked_eye", {
+        get : function () {
+            return this.checked;
+        },
+        set : function (val) {
+            this.checked = val;
+            if (this.checked) {
+                button1.innerHTML = "<i class='bi bi-eye'></i>";
+            }
+            else {
+                button1.innerHTML = "<i class='bi bi-eye-slash-fill'></i>";
+            }
+        }
+    });
+}
+
+/** 
+* @param {HTMLEvent} event event that triggered function
+* @summary Delete all trace of a tab including datautils.data.key*/
 interfaceUtils._rGenUIFuncs.createTable=function(){
     let allRegionClasses = Object.values(regionUtils._regions).map(function(e) { return e.regionClass; })
     let singleRegionClasses = allRegionClasses.filter((v, i, a) => a.indexOf(v) === i);
-    console.log("singleRegionClasses", singleRegionClasses);
     //I do this to know if I have name selected, and also to know where to draw the 
     //color from
     var groupUI=HTMLElementUtils.createElement({"kind":"div"});
@@ -2831,7 +2869,7 @@ interfaceUtils._rGenUIFuncs.createTable=function(){
     var theadrow=HTMLElementUtils.createElement({"kind":"tr"});
     var tbody=HTMLElementUtils.createElement({"kind":"tbody"});
 
-    var headopts=["", "", "Class", "Counts", "Color",""];//,""];
+    var headopts=["", "", "Class", "Counts", "Color","Visible", "Delete"];
     var sortable = {
         "": "sorttable_nosort",
         "Counts": "sorttable_sort",
@@ -2858,7 +2896,7 @@ interfaceUtils._rGenUIFuncs.createTable=function(){
     var td3=HTMLElementUtils.createElement({"kind":"td"});
     var td4=HTMLElementUtils.createElement({"kind":"td"});
     var td5=HTMLElementUtils.createElement({"kind":"td"});
-    //var td6=HTMLElementUtils.createElement({"kind":"td"});
+    var td6=HTMLElementUtils.createElement({"kind":"td"});
 
     tr.appendChild(td0);
     tr.appendChild(td1);
@@ -2866,18 +2904,27 @@ interfaceUtils._rGenUIFuncs.createTable=function(){
     tr.appendChild(td3);
     tr.appendChild(td4);
     tr.appendChild(td5);
-    //tr.appendChild(td6);
+    tr.appendChild(td6);
 
     // Get previous "All" checkbox element so that we can re-use its old state
     const lastCheckAll = interfaceUtils.getElementById("regionUI_all_check", false);
 
+    
+    var label2=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"for":"regionUI_all_check","class":"cursor-pointer"}});
+    label2.innerText="All";
+    td2.appendChild(label2);
+
+    var label3=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"for":"regionUI_all_check","class":"cursor-pointer"}});
+    label3.innerText=Object.keys(regionUtils._regions).length;
+    td3.appendChild(label3);        
+ 
     var check0=HTMLElementUtils.createElement({"kind":"input", "id":"regionUI_all_check","extraAttributes":{"class":"form-check-input","type":"checkbox" }});
     check0.checked = lastCheckAll != null ? lastCheckAll.checked : true;
     td1.appendChild(check0);
     check0.addEventListener("input",(event)=>{
         visible = event.target.checked;
         clist = interfaceUtils.getElementsByClassName("regionUI-region-input");
-        for (var i = 0; i < clist.length; ++i) { clist[i].checked = visible; }
+        for (var i = 0; i < clist.length; ++i) { clist[i].checked_eye = visible; }
         groupRegions = Object.values(regionUtils._regions)
         for (region of groupRegions) {
             region.visibility = visible;
@@ -2895,14 +2942,8 @@ interfaceUtils._rGenUIFuncs.createTable=function(){
         glUtils.updateRegionLUTTextures();
         glUtils.draw(); */      
     });
-    var label2=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"for":"regionUI_all_check","class":"cursor-pointer"}});
-    label2.innerText="All";
-    td2.appendChild(label2);
+    td5.appendChild(check0);
 
-    var label3=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"for":"regionUI_all_check","class":"cursor-pointer"}});
-    label3.innerText=Object.keys(regionUtils._regions).length;
-    td3.appendChild(label3);        
- 
     var regionsdeletebutton = HTMLElementUtils.createButton({
         innerText: "<i class='bi bi-trash'></i>",
         extraAttributes: {
@@ -2910,20 +2951,16 @@ interfaceUtils._rGenUIFuncs.createTable=function(){
         }
     });
     regionsdeletebutton.addEventListener('click', function () {
-        interfaceUtils.confirm('Are you sure you want to delete the whole '+regionClass+' group?')
+        interfaceUtils.confirm('Are you sure you want to delete all regions?')
         .then(function(_confirm){
             if (_confirm) {
-                groupRegions = Object.values(regionUtils._regions).filter(
-                    x => x.regionClass==regionClass
-                ).forEach(function (region) {
-                    regionUtils.deleteRegion(region.id, true);
-                });
-                regionUtils.updateAllRegionClassUI();
+                regionUtils.deleteAllRegions();
             }
         });
     });
-    td5.appendChild(regionsdeletebutton);
+    td6.appendChild(regionsdeletebutton);
 
+    interfaceUtils._rGenUIFuncs.checkboxToEye(check0);
     thead2.appendChild(tr);
 
     for (i of Object.keys(singleRegionClasses.sort())) {
@@ -2937,17 +2974,18 @@ interfaceUtils._rGenUIFuncs.createTable=function(){
         var td0=HTMLElementUtils.createElement(
             {kind:"td", extraAttributes:{
                 "data-bs-toggle":"collapse",
-                "data-bs-target":"#collapse_region_" + (i + 1),
+                "data-bs-target":"#collapse_region_" + regionClassID,
                 "aria-expanded":"false",
-                "aria-controls":"collapse_region_" + (i + 1),
-                "class":"collapse_button_transform collapsed"
+                "aria-controls":"collapse_region_" + regionClassID,
+                "class":"collapse_button_regionClass collapse_button_transform collapsed",
+                "id": regionClassID + "_collapse_table_button"
             }});
         var td1=HTMLElementUtils.createElement({"kind":"td"});
         var td2=HTMLElementUtils.createElement({"kind":"td"});
         var td3=HTMLElementUtils.createElement({"kind":"td"});
         var td4=HTMLElementUtils.createElement({"kind":"td"});
         var td5=HTMLElementUtils.createElement({"kind":"td"});
-        //var td6=HTMLElementUtils.createElement({"kind":"td"});
+        var td6=HTMLElementUtils.createElement({"kind":"td"});
 
         tr.appendChild(td0);
         tr.appendChild(td1);
@@ -2955,29 +2993,7 @@ interfaceUtils._rGenUIFuncs.createTable=function(){
         tr.appendChild(td3);
         tr.appendChild(td4);
         tr.appendChild(td5);
-        //tr.appendChild(td6);
-        
-        var check0=HTMLElementUtils.createElement({"kind":"input", "id":"regionUI_"+regionClassID+"_check","extraAttributes":{"class":"form-check-input regionUI-region-input","type":"checkbox" }});
-        check0.checked = true;
-        td1.appendChild(check0);
-        
-        var check1=HTMLElementUtils.createElement({"kind":"input", "id":"regionUI_"+regionClassID+"_hidden","extraAttributes":{"class":"form-check-input region-hidden d-none regionUI-region-hidden","type":"checkbox" }});
-        check1.checked = true;
-        td1.appendChild(check1);
-        
-        check0.addEventListener('input', function (event) {
-            var visible = event.target.checked;
-            clist = interfaceUtils.getElementsByClassName("regionUI-region-"+regionClassID+"-input");
-            for (var i = 0; i < clist.length; ++i) { clist[i].checked = visible; }
-            groupRegions = Object.values(regionUtils._regions).filter(
-                x => x.regionClass==regionClass
-            );
-            for (region of groupRegions) {
-                region.visibility = visible;
-            };
-            glUtils.updateRegionLUTTextures();
-            glUtils.draw();
-        })
+        tr.appendChild(td6);
         
         if (regionClass) rClass = regionClass; else rClass = "";
         var regionclasstext = HTMLElementUtils.inputTypeText({
@@ -2990,14 +3006,19 @@ interfaceUtils._rGenUIFuncs.createTable=function(){
         });
         regionclasstext.addEventListener('change', function () {
             var newClass = this.value;
+            const color = Object.values(regionUtils._regions).find(
+                x => x.regionClass==newClass
+            )?.polycolor;
             groupRegions = Object.values(regionUtils._regions).filter(
                 x => x.regionClass==regionClass
             );
             for (region of groupRegions) {
-                if (document.getElementById(region.id + "_class_ta"))
-                    document.getElementById(region.id + "_class_ta").value = newClass;
+                const escapedRegionID = HTMLElementUtils.stringToId(region.id);
+                if (document.getElementById(escapedRegionID + "_class_ta"))
+                    document.getElementById(escapedRegionID + "_class_ta").value = newClass;
                 regionUtils.changeRegion(region.id);
                 region.regionClass = newClass;
+                if (color) {region.polycolor = color;}
             };
             regionUtils.updateAllRegionClassUI();
         });td2.appendChild(regionclasstext);
@@ -3012,7 +3033,6 @@ interfaceUtils._rGenUIFuncs.createTable=function(){
                 x => x.regionClass==regionClass
             );
             if (groupRegions.length > 0) {
-                console.log(groupRegions[0]);
                 lastColor = groupRegions[0].polycolor;
             }
             else {
@@ -3044,6 +3064,25 @@ interfaceUtils._rGenUIFuncs.createTable=function(){
         });
         td4.appendChild(regioncolorinput);
 
+        var check0=HTMLElementUtils.createElement({"kind":"input", "id":"regionUI_"+regionClassID+"_check","extraAttributes":{"class":"form-check-input regionUI-region-input","type":"checkbox" }});
+        check0.checked = true;
+        td5.appendChild(check0);
+        interfaceUtils._rGenUIFuncs.checkboxToEye(check0);
+        
+        check0.addEventListener('input', function (event) {
+            var visible = event.target.checked;
+            clist = interfaceUtils.getElementsByClassName("regionUI-region-"+regionClassID+"-input");
+            for (var i = 0; i < clist.length; ++i) { clist[i].checked_eye = visible; }
+            groupRegions = Object.values(regionUtils._regions).filter(
+                x => x.regionClass==regionClass
+            );
+            for (region of groupRegions) {
+                region.visibility = visible;
+            };
+            glUtils.updateRegionLUTTextures();
+            glUtils.draw();
+        })
+
         var regionsdeletebutton = HTMLElementUtils.createButton({
             innerText: "<i class='bi bi-trash'></i>",
             extraAttributes: {
@@ -3063,7 +3102,7 @@ interfaceUtils._rGenUIFuncs.createTable=function(){
                 }
             });
         });
-        td5.appendChild(regionsdeletebutton);
+        td6.appendChild(regionsdeletebutton);
         /*
         button6 = HTMLElementUtils.createElement({"kind":"div", extraAttributes:{"data-escapedID":regionClassID, "class":"btn btn-light btn-sm mx-1"}});
         button6.innerHTML = "<i class='bi bi-eye'></i>";
@@ -3117,7 +3156,7 @@ interfaceUtils._rGenUIFuncs.createTable=function(){
         let table_subregions=HTMLElementUtils.createElement({"kind":"table","extraAttributes":{"class":"table marker_table"}});
         var tbody_subregions=HTMLElementUtils.createElement({"kind":"tbody","id":"tbody_subregions_"+regionClassID});
         let collapse_div=HTMLElementUtils.createElement({"kind":"div"});
-        collapse_div.id = "collapse_region_" + (i + 1);
+        collapse_div.id = "collapse_region_" + regionClassID;
         collapse_div.setAttribute("data-region-class", regionClass);
         collapse_div.setAttribute("data-region-classID", regionClassID);
         collapse_div.classList.add("collapse")
@@ -3185,6 +3224,7 @@ interfaceUtils._rGenUIFuncs.createTable=function(){
 * @summary Delete all trace of a tab including datautils.data.key*/
 interfaceUtils._rGenUIFuncs.createRegionRow=function(regionId){
     var region = regionUtils._regions[regionId];
+    const escapedRegionId = HTMLElementUtils.stringToId(regionId);
     let regionClass = region.regionClass;
     let regionClassID = HTMLElementUtils.stringToId("region_" + regionClass);
 
@@ -3196,29 +3236,36 @@ interfaceUtils._rGenUIFuncs.createRegionRow=function(regionId){
     var td2=HTMLElementUtils.createElement({"kind":"td"});
     var td3=HTMLElementUtils.createElement({"kind":"td"});
     var td4=HTMLElementUtils.createElement({"kind":"td"});
+    var td5=HTMLElementUtils.createElement({"kind":"td"});
+    var td6=HTMLElementUtils.createElement({"kind":"td"});
 
     tr.appendChild(td0);
     tr.appendChild(td1);
     tr.appendChild(td2);
     tr.appendChild(td3);
     tr.appendChild(td4);
+    tr.appendChild(td5);
+    tr.appendChild(td6);
     
-    var check0=HTMLElementUtils.createElement({"kind":"input", "id":"singleRegionUI_"+regionId+"_check","extraAttributes":{"class":"form-check-input regionUI-region-input regionUI-region-"+regionClassID+"-input","type":"checkbox" }});
-    check0.checked = true;
-    td1.appendChild(check0);
     
-    var check1=HTMLElementUtils.createElement({"kind":"input", "id":"singleRegionUI_"+regionId+"_hidden","extraAttributes":{"class":"form-check-input region-hidden d-none regionUI-region-hidden","type":"checkbox" }});
-    check1.checked = true;
-    td1.appendChild(check1);
-    
-    check0.addEventListener('input', function (event) {
-        var visible = event.target.checked;
-        console.log(region, visible);
-        region.visibility = visible;
-        glUtils.updateRegionLUTTextures();
-        glUtils.draw();
-    })
-    
+    const checkBox = HTMLElementUtils.inputTypeCheckbox({
+        id: region.id + "_selection_check",
+        class: "form-check-input",
+        value: false,
+        eventListeners: {
+        click: function () {
+            this.checked
+            ? regionUtils.selectRegion(region)
+            : regionUtils.deSelectRegion(region.id);
+        },
+        },
+    });
+    checkBox.checked = regionUtils._selectedRegions[region.id] != undefined;
+    td1.appendChild(checkBox);
+    td1.style.width = "1px";
+    td1.classList.add("px-0");
+    td1.classList.add("mx-0");
+
     var regionclasstext = HTMLElementUtils.inputTypeText({
         extraAttributes: {
             size: 9,
@@ -3229,7 +3276,11 @@ interfaceUtils._rGenUIFuncs.createRegionRow=function(regionId){
     });
     regionclasstext.addEventListener('change', function () {
         var newClass = this.value;
+        const color = Object.values(regionUtils._regions).find(
+            x => x.regionClass==newClass
+        )?.polycolor;
         region.regionClass = newClass;
+        if (color) {region.polycolor = color;}
         regionUtils.updateAllRegionClassUI();
     });
     td2.appendChild(regionclasstext);
@@ -3255,6 +3306,74 @@ interfaceUtils._rGenUIFuncs.createRegionRow=function(regionId){
     });
     td3.appendChild(regionnametext);
 
+    var regionshistobutton = HTMLElementUtils.createButton({
+        innerText: "<i class='bi bi-bar-chart-fill'></i>",
+        extraAttributes: {
+            class: "col btn btn-sm btn-light form-control-sm mx-1"
+        }
+    });
+    regionshistobutton.addEventListener('click', function () {
+        regionUtils.analyzeRegion(region.id);
+        
+        var rpanelbody = HTMLElementUtils.createElement({ kind: "div" });
+
+        var div = HTMLElementUtils.createElement({ kind: "div", id: region.id + "_histogram" });
+        var histogram = regionUtils._regions[region.id].barcodeHistogram;
+        var table = div.appendChild(HTMLElementUtils.createElement({
+            kind: "table",
+            extraAttributes: {
+                class: "table table-striped",
+                style: "overflow-y: auto;max-height:600px;display:block;"
+            }
+        }));
+        thead = HTMLElementUtils.createElement({kind: "thead"});
+        thead.innerHTML = `<tr>
+        <th scope="col">Key</th>
+        <th scope="col">Name</th>
+        <th scope="col">Count</th>
+        </tr>`;
+        tbody = HTMLElementUtils.createElement({kind: "tbody"});
+        table.appendChild(thead);
+        table.appendChild(tbody);
+
+        for (var i in histogram) {
+            var innerHTML = "";
+            innerHTML += "<td>" + histogram[i].key + "</td>";
+            innerHTML += "<td>" + histogram[i].name + "</td>";
+            innerHTML += "<td>" + histogram[i].count + "</td>";
+            tbody.appendChild(HTMLElementUtils.createElement({
+                kind: "tr",
+                "innerHTML": innerHTML
+            }));
+        }
+        rpanelbody.appendChild(div);
+        interfaceUtils.alert(
+            rpanelbody.innerHTML,
+            "Barcode Histogram"
+        );
+        
+    });
+    td4.appendChild(regionshistobutton);
+    td4.style.width = "1px";
+    td4.classList.add("px-0");
+    td4.classList.add("mx-0");
+    var check0=HTMLElementUtils.createElement({"kind":"input", "id":"singleRegionUI_"+escapedRegionId+"_check","extraAttributes":{"class":"form-check-input regionUI-region-input regionUI-region-"+regionClassID+"-input","type":"checkbox" }});
+    check0.checked = true;
+    
+    check0.addEventListener('input', function (event) {
+        var visible = event.target.checked;
+        region.visibility = visible;
+        d3.selectAll(".regionUI-region-hover").remove();
+        glUtils.updateRegionLUTTextures();
+        glUtils.draw();
+    })
+    
+    td5.appendChild(check0);
+    interfaceUtils._rGenUIFuncs.checkboxToEye(check0);
+    td5.style.width = "1px";
+    td5.classList.add("px-0");
+    td5.classList.add("mx-0");
+
     var regionsdeletebutton = HTMLElementUtils.createButton({
         innerText: "<i class='bi bi-trash'></i>",
         extraAttributes: {
@@ -3263,9 +3382,14 @@ interfaceUtils._rGenUIFuncs.createRegionRow=function(regionId){
     });
     regionsdeletebutton.addEventListener('click', function () {
         regionUtils.deleteRegion(region.id, true);
+        d3.selectAll(".regionUI-region-hover").remove();
         regionUtils.updateAllRegionClassUI();
     });
-    td4.appendChild(regionsdeletebutton);
+    td6.appendChild(regionsdeletebutton);
+    td6.style.width = "1px";
+    td6.classList.add("px-0");
+    td6.classList.add("mx-0");
+
     /*
     button6 = HTMLElementUtils.createElement({"kind":"div", extraAttributes:{"data-escapedID":regionClassID, "class":"btn btn-light btn-sm mx-1"}});
     button6.innerHTML = "<i class='bi bi-eye'></i>";
@@ -3312,9 +3436,19 @@ interfaceUtils._rGenUIFuncs.createRegionRow=function(regionId){
             glUtils.draw();
         })
     })*/
-    
+    tr.onmouseover = function () {
+        if (!region.visibility) {
+            d3.selectAll(".regionUI-region-hover").remove();
+            return;
+        }
+        tr.style.background = "var(--bs-primary-light)";
+        const viewportPoints = regionUtils.globalPointsToViewportPoints(region.globalPoints, region.collectionIndex);
+        regionUtils.drawRegionPath(viewportPoints, escapedRegionId, "#000000", "#ffffff55", "0 0.00  0");
+        d3.selectAll("#" + escapedRegionId + "_poly").classed("regionUI-region-hover", true);
+    };
+    tr.onmouseout = function () {
+        tr.style.background = "white";
+        d3.selectAll(".regionUI-region-hover").remove();
+    };
     return tr;
 }
-
-
-
