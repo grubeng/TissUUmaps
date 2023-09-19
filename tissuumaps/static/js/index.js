@@ -1,5 +1,5 @@
+// h5Utils.js is missing due to issue with classes
 import  "script-loader!./utils/regionUtils.js"
-import  "script-loader!./utils/h5Utils.js"
 import  "script-loader!./utils/customElementUtils.js"
 import  "script-loader!./utils/dataUtils.js"
 import  "script-loader!./utils/filterUtils.js"
