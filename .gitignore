@@ -13,4 +13,5 @@ tests
 .ipynb_checkpoints
 plugins_repo/pluginList.json
 tissuumaps/web/
+tissuumaps/static/node_modules
 plugins
