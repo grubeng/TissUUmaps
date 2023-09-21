@@ -1,3 +1,4 @@
+import * as d3 from "d3"
 /**
 * @file interfaceUtils.js adding and managing elements in the interface
 * @author Leslie Solorzano
@@ -6,7 +7,7 @@
 /**
 * @namespace interfaceUtils
 */
-interfaceUtils={}
+const interfaceUtils={}
 
 
 /** 
@@ -536,6 +537,7 @@ interfaceUtils.hideTabsExcept = function (a) {
 */
 interfaceUtils.generateDataTabUI = function(options){
     var generated;
+    let divpane;
     if (options) if (options.uid) {
         interfaceUtils._mGenUIFuncs.ctx.aUUID = options.uid;
         generated=options.uid;
@@ -920,7 +922,7 @@ interfaceUtils._mGenUIFuncs.generateTab=function(){
     
     //first thing is to add the tab in the level 1. Which is a li with a button
     li1=HTMLElementUtils.createElement({"kind":"li", "id":generated+"_li-tab", "extraAttributes":{ "class":"nav-item", "role":"presentation"}});
-    button1=HTMLElementUtils.createButton({"id":generated+"_marker-tab-button","extraAttributes":{ "class":"nav-link marker-tab-button", "data-bs-toggle":"tab","data-bs-target":"#"+generated+"_marker-pane","type":"button","role":"tab","aria-controls":generated+"_marker","aria-selected":"false"}})
+    let button1=HTMLElementUtils.createButton({"id":generated+"_marker-tab-button","extraAttributes":{ "class":"nav-link marker-tab-button", "data-bs-toggle":"tab","data-bs-target":"#"+generated+"_marker-pane","type":"button","role":"tab","aria-controls":generated+"_marker","aria-selected":"false"}})
 
     span1=HTMLElementUtils.createElement({"kind":"span", "id":generated+"_marker-tab-name","extraAttributes":{ "title": "New markers"}})
     span1.innerHTML="New markers";
@@ -948,7 +950,7 @@ interfaceUtils._mGenUIFuncs.generateTab=function(){
     */
     //now the content of that tab pane which is a form like group to select the options for rendering
     //1.1
-    divpane=HTMLElementUtils.createElement({"kind":"div", "id":generated+"_marker-pane", "extraAttributes":{  "class":"tab-pane",  "role":"tabpanel", "aria-labelledby":generated+"_marker-tab"}});
+    let divpane=HTMLElementUtils.createElement({"kind":"div", "id":generated+"_marker-pane", "extraAttributes":{  "class":"tab-pane",  "role":"tabpanel", "aria-labelledby":generated+"_marker-tab"}});
 
     //return this pane
     return divpane;
@@ -2297,7 +2299,7 @@ interfaceUtils.loadingModal = function(text, title) {
 interfaceUtils.alert = function(text, title) {
     if (!title) title = "Alert";
     var modalUID = "messagebox"
-    button1=HTMLElementUtils.createButton({"extraAttributes":{ "class":"btn btn-primary mx-2", "data-bs-dismiss":"modal"}})
+    let button1=HTMLElementUtils.createButton({"extraAttributes":{ "class":"btn btn-primary mx-2", "data-bs-dismiss":"modal"}})
     button1.innerText = "Ok";
     buttons=divpane=HTMLElementUtils.createElement({"kind":"div"});
     buttons.appendChild(button1);
@@ -2338,7 +2340,7 @@ interfaceUtils.prompt = function (text, value, title, type) {
     return new Promise((resolve, reject) => {
         if (!title) title = "Prompt";
         var modalUID = "messagebox"
-        button1=HTMLElementUtils.createButton({"extraAttributes":{ "class":"btn btn-primary mx-2"}})
+        let button1=HTMLElementUtils.createButton({"extraAttributes":{ "class":"btn btn-primary mx-2"}})
         button1.innerText = "Ok";
         button2=HTMLElementUtils.createButton({"extraAttributes":{ "class":"btn btn-secondary mx-2", "data-bs-dismiss":"modal"}})
         button2.innerText = "Cancel";
@@ -2695,12 +2697,14 @@ interfaceUtils.createDownloadButtonRegions = function(options) {
 }
 
 interfaceUtils.addMenuItem = function(itemTree, callback, before) {
-    itemID = "menubar";
-    rootElement = document.querySelector("#navbar-menu .navbar-nav");
+    let itemID = "menubar";
+    let rootElement = document.querySelector("#navbar-menu .navbar-nav");
     for (var i = 0; i<itemTree.length; i++) {
         itemID += "_" + HTMLElementUtils.stringToId(itemTree[i]);
         if (!document.getElementById(itemID)) {
-            liItem = HTMLElementUtils.createElement({"kind":"li", "extraAttributes":{"class":"nav-item dropdown"}})
+            let liItem = HTMLElementUtils.createElement({"kind":"li", "extraAttributes":{"class":"nav-item dropdown"}})
+            let aElement; 
+            let spanMore;
             if (i == 0)
                 rootElement.insertBefore(liItem, document.getElementById("nav-item-title"));
             else if (before)
@@ -2995,6 +2999,8 @@ interfaceUtils._rGenUIFuncs.createTable=function(){
         tr.appendChild(td4);
         tr.appendChild(td5);
         tr.appendChild(td6);
+
+        let rClass;
         
         if (regionClass) rClass = regionClass; else rClass = "";
         var regionclasstext = HTMLElementUtils.inputTypeText({
@@ -3175,8 +3181,8 @@ interfaceUtils._rGenUIFuncs.createTable=function(){
                     x => x.regionClass==selectedRegionClass
                 )
                 let subGroupRegions = groupRegions.slice(0, numberOfItemsPerPage);
-                regionDetails = document.createDocumentFragment();
-                for (region of subGroupRegions) {
+                let regionDetails = document.createDocumentFragment();
+                for (let region of subGroupRegions) {
                     regionDetails.appendChild(interfaceUtils._rGenUIFuncs.createRegionRow(region.id));
                 }
                 tbody_subregions.appendChild(regionDetails);
@@ -3453,3 +3459,5 @@ interfaceUtils._rGenUIFuncs.createRegionRow=function(regionId){
     };
     return tr;
 }
+
+export default interfaceUtils

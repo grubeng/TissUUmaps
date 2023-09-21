@@ -1,3 +1,4 @@
+import * as d3 from "d3"
 /**
  * @file overlayUtils.js Interface to ask information to OSD
  * @author Leslie Solorzano
@@ -11,7 +12,7 @@
  * @property {Number} overlayUtils._percentageForSubsample - Take this percentage of each barcode when downsamplir for lower resolutions
  * @property {Number}  overlayUtils._zoomForSubsample - When the zoom is bigger than this, display all the checked genes 
  */
-overlayUtils = {
+const overlayUtils = {
     _regionToolbar: false,
     _d3nodes: {},
     _percentageForSubsample: 0.25,
@@ -154,8 +155,8 @@ overlayUtils.addLayerSettings = function(layerName, tileSource, layerIndex, chec
         layerTable.id = "image-overlay-table";
         layerTable.className += "table table-striped"
         layerTable.style.marginBottom = "0px";
-        filterHeaders = "";
-        for (filterIndex = 0; filterIndex < filterUtils._filtersUsed.length; filterIndex++) {
+        let filterHeaders = "";
+        for (let filterIndex = 0; filterIndex < filterUtils._filtersUsed.length; filterIndex++) {
             filterHeaders += "<th class='text-center'>" + filterUtils._filtersUsed[filterIndex] + "</th>";
         }
         layerTable.innerHTML = `<thead>
@@ -213,8 +214,8 @@ overlayUtils.addLayerSettings = function(layerName, tileSource, layerIndex, chec
     tr.appendChild(td_visible);
     tr.appendChild(td_opacity);
 
-    for (filterIndex = 0; filterIndex < filterUtils._filtersUsed.length; filterIndex++) {
-        filterName = filterUtils._filtersUsed[filterIndex];
+    for (let filterIndex = 0; filterIndex < filterUtils._filtersUsed.length; filterIndex++) {
+        let filterName = filterUtils._filtersUsed[filterIndex];
         filterParams = filterUtils.getFilterParams(filterName)
         filterParams.layer = layerIndex + 1;
 
@@ -285,15 +286,15 @@ overlayUtils.addLayerSettings = function(layerName, tileSource, layerIndex, chec
     var td_transform = document.createElement("td");
     td_transform.classList.add("p-0")
     td_transform.setAttribute("colspan","100");
-    collapse_div = document.createElement("div");
+    let collapse_div = document.createElement("div");
     collapse_div.id = "collapse_tranform_" + layerIndex;
     collapse_div.classList.add("collapse")
     collapse_div.classList.add("container")
     collapse_div.classList.add("p-0")
     
-    row = HTMLElementUtils.createRow({});
+    let row = HTMLElementUtils.createRow({});
     row.classList.add("row-cols-auto")
-    col1 = HTMLElementUtils.createColumn({
+    let col1 = HTMLElementUtils.createColumn({
         "width": "auto", 
         "extraAttributes": {"data-source":tileSource, "class":"layerSettingButton"}
     });
@@ -334,13 +335,13 @@ overlayUtils.addLayerSettings = function(layerName, tileSource, layerIndex, chec
         overlayUtils.updateTransform(layerIndex);
         glUtils.draw();
       });
-      label12 = HTMLElementUtils.createElement({
+      let label12 = HTMLElementUtils.createElement({
         kind: "span",
         extraAttributes: { for: "layer_" + layerIndex + "_" + field, class:"input-group-text py-1 px-2 small"},
       });   
       label12.innerHTML = field.replace("rotation", "rot.");
     
-      col11 = HTMLElementUtils.createElement({ kind: "div" });
+      let col11 = HTMLElementUtils.createElement({ kind: "div" });
       col11.classList.add("col");
       col11.classList.add("input-group");
       col11.classList.add("p-0");
@@ -393,7 +394,7 @@ overlayUtils.addLayerSettings = function(layerName, tileSource, layerIndex, chec
         channelRange.id = "channelRangeInput";
         elt.appendChild(span);
         elt.appendChild(channelRange);
-        changeFun = function(ev) {
+        function changeFun(ev) {
             var slider = $(channelRange)[0];
             channel = slider.value;
             $(".visible-layers").prop("checked",true);$(".visible-layers").click();$("#visible-layer-"+(channel- -1)).click();
@@ -533,8 +534,8 @@ overlayUtils.addLayer = function(layer, i, visible) {
         tileSource: tmapp._url_suffix + tileSource,
         opacity: opacity,
         success: function(i) {
-            layer0X = tmapp[op + "_viewer"].world.getItemAt(0).getContentSize().x;
-            layerNX = tmapp[op + "_viewer"].world.getItemAt(tmapp[op + "_viewer"].world.getItemCount()-1).getContentSize().x;
+            let layer0X = tmapp[op + "_viewer"].world.getItemAt(0).getContentSize().x;
+            let layerNX = tmapp[op + "_viewer"].world.getItemAt(tmapp[op + "_viewer"].world.getItemCount()-1).getContentSize().x;
             tmapp[op + "_viewer"].world.getItemAt(tmapp[op + "_viewer"].world.getItemCount()-1).setWidth(scale*layerNX/layer0X);
             var point = new OpenSeadragon.Point(x/layer0X, y/layer0X);
             tmapp[op + "_viewer"].world.getItemAt(tmapp[op + "_viewer"].world.getItemCount()-1).setPosition(point);
@@ -938,3 +939,5 @@ overlayUtils.savePNG=function() {
         img.src = url;
     })
 }
+
+export default overlayUtils

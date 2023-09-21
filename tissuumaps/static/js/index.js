@@ -6,14 +6,14 @@ require("./utils/customElementUtils")
 require("./utils/dataUtils")
 require("./utils/filterUtils")
 require("./utils/HTMLElementUtils")
-require("./utils/interfaceUtils")
-require("./utils/markerUtils")
+interfaceUtils = require("./utils/interfaceUtils").default
+markerUtils = require("./utils/markerUtils").default
 require("./utils/OSDViewerUtils")
-require("./utils/overlayUtils")
+overlayUtils = require("./utils/overlayUtils").default
 require("./utils/pluginUtils")
 require("./utils/projectUtils")
 require("./utils/regionOperations")
 require("./utils/regionOperationsUI")
 require("./utils/glUtils")
-require("./tmapp.js")
+tmapp = require("./tmapp.js").default
 require("./flask")

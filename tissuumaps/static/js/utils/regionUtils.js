@@ -1,3 +1,4 @@
+import * as d3 from "d3"
 /**
  * @namespace regionUtils
  * @classdesc Region utilities, everything to do with 

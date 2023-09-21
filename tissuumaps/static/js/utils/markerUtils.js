@@ -1,3 +1,4 @@
+import * as d3 from "d3"
 /**
  * @namespace markerUtils
  * @classdesc Work with anything that has to do with markers, take options from the interface
@@ -7,7 +8,7 @@
    * 
 */
 
-markerUtils = {
+const markerUtils = {
     //type must be like d3.symbolVoss
     _d3Symbols: [d3.symbolCross, d3.symbolDiamond, d3.symbolSquare, d3.symbolTriangle, d3.symbolStar, d3.symbolWye, d3.symbolCircle],  // Not used
     _symbolStrings: ["cross", "diamond", "square", "triangle up", "star", "clobber", "disc", "hbar", "vbar", "tailed arrow", "triangle down", "ring", "x", "arrow", "gaussian"],
@@ -140,3 +141,5 @@ markerUtils.getMarkerTooltip = function(uid, markerIndex) {
     }
     return returnString;
 }
+
+export default markerUtils
