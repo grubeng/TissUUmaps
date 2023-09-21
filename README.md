@@ -10,22 +10,22 @@ For installation and usage, read the [TissUUmaps online documentation](https://t
 
 For demo and tutorials, see the [TissUUmaps web page](https://tissuumaps.github.io).
 
-## Web development
+# Web development
 
-# Start the flask server
+## Start the flask server
 
 Follow the instructions provided in the [TissUUmaps online documentation](https://tissuumaps.github.io/TissUUmaps-docs/) to start up the flask server.
 
-# Install dependencies
+## Install dependencies
 
 - Navigate to `tissuumaps/static`
 - Install dependencies with `npm install`
 
-# Generate a build using webpack
+## Generate a build using webpack
 
 - Build with `npm run build`
 - Build with `npm run dev` if you want webpack to recompile on every file change
 
-# Navigate to [TissUUmaps](http://127.0.0.1:5000/)
+## Navigate to [TissUUmaps](http://127.0.0.1:5000/)
 
 Refresh the page after each build to see the latest changes
