@@ -20,7 +20,7 @@
  * @property {Object{}} regionUtils._regionIDToIndex - Mapping between region ID (string) and object ID (index)
  * @property {Object{}} regionUtils._regionIndexToID - Mapping between object ID (index) and region ID (string)
 */
-regionUtils = {
+const regionUtils = {
     _isNewRegion: true,
     _currentlyDrawing: false,
     _currentRegionId: 0,
@@ -209,7 +209,7 @@ regionUtils.closePolygon = function () {
     var drawingclass = regionUtils._drawingclass;
     var regionid = 'region' + regionUtils._currentRegionId.toString();
     d3.select("." + drawingclass).remove();
-    regionsobj = d3.select(canvas);
+    const regionsobj = d3.select(canvas);
     
     regionUtils._isNewRegion = true;
     regionUtils._currentPoints.push(regionUtils._currentPoints[0]);
@@ -681,7 +681,7 @@ regionUtils.deleteRegion = function (regionid, skipUpdateAllRegionClassUI) {
  * @summary Given a region id, deletes this region in the interface */
 regionUtils.deleteAllRegions = function () {
     var canvas = overlayUtils._d3nodes[tmapp["object_prefix"] + "_regions_svgnode"].node();
-    regionsobj = d3.select(canvas);
+    const regionsobj = d3.select(canvas);
     regionsobj.selectAll("*").remove();
 
     var regionsPanel = document.getElementById("markers-regions-panel");
@@ -703,7 +703,7 @@ regionUtils.updateAllRegionClassUI = function () {
             }
         }
         let regionUI = interfaceUtils._rGenUIFuncs.createTable();
-        menuui=interfaceUtils.getElementById("markers-regions-panel");
+        const menuui=interfaceUtils.getElementById("markers-regions-panel");
         menuui.innerText="";
 
         menuui.appendChild(regionUI);
@@ -1872,3 +1872,5 @@ regionUtils._generateRegionToColorLUT = function() {
     }
     console.assert(regionUtils._regionToColorLUT.length == (objectID * 4));
 }
+
+export default regionUtils

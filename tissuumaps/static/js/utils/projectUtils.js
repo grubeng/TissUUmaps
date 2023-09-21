@@ -9,7 +9,7 @@
  * @version projectUtils 2.0
  * @classdesc The root namespace for projectUtils.
  */
-var projectUtils = {
+projectUtils = {
      _activeState:{},
      _hideCSVImport: false,
      _settings:[

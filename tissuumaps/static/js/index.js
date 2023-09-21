@@ -1,18 +1,19 @@
-// h5Utils.js is missing due to issue with classes
-import  "script-loader!./utils/regionUtils.js"
-import  "script-loader!./utils/customElementUtils.js"
-import  "script-loader!./utils/dataUtils.js"
-import  "script-loader!./utils/filterUtils.js"
-import  "script-loader!./utils/glUtils.js"
-import  "script-loader!./utils/HTMLElementUtils.js"
-import  "script-loader!./utils/interfaceUtils.js"
-import  "script-loader!./utils/markerUtils.js"
-import  "script-loader!./utils/OSDViewerUtils.js"
-import  "script-loader!./utils/overlayUtils.js"
-import  "script-loader!./utils/pluginUtils.js"
-import  "script-loader!./utils/projectUtils.js"
-import  "script-loader!./utils/regionOperations.js"
-import  "script-loader!./utils/regionOperationsUI.js"
-import  "script-loader!./tmapp.js"
-import  "script-loader!./flask.js"
-
+regionUtils = require("./utils/regionUtils").default
+h5Utils = require("./utils/h5Utils").default
+H5AD_API = require("./utils/h5Utils").H5AD_API
+H5_API = require("./utils/h5Utils").H5_API
+require("./utils/customElementUtils")
+require("./utils/dataUtils")
+require("./utils/filterUtils")
+require("./utils/HTMLElementUtils")
+require("./utils/interfaceUtils")
+require("./utils/markerUtils")
+require("./utils/OSDViewerUtils")
+require("./utils/overlayUtils")
+require("./utils/pluginUtils")
+require("./utils/projectUtils")
+require("./utils/regionOperations")
+require("./utils/regionOperationsUI")
+require("./utils/glUtils")
+require("./tmapp.js")
+require("./flask")

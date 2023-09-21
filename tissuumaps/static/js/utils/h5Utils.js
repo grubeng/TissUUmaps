@@ -8,12 +8,12 @@
  * @namespace h5Utils
  * @property {Boolean} _initialized True when h5Utils has been initialized
  */
- h5Utils = {
+const h5Utils = {
     worker_path: 'js/utils/h5Utils_worker.js',
     relative_root: '../../'
  }
 
-class H5_API {
+export class H5_API {
     constructor() {
         this.chunkSize = 1024 * 1024;
         this.resolvers = {};
@@ -96,7 +96,7 @@ class H5_API {
     }
 }
 
-class H5AD_API  extends H5_API {
+export class H5AD_API  extends H5_API {
         
     getX_join (url, rowIndex, path) {
         return new Promise(resolve => {
@@ -243,3 +243,5 @@ hdf5Api.loadPromise(url).then((data) => {
 // globalY: obsm/spatial;1
 // Num Obs: obs/*
 // Cat Obs: obs/*/codes + obs/*/categories
+
+export default h5Utils
