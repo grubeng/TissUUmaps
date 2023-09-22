@@ -20,7 +20,7 @@
  * @property {Object{}} regionUtils._regionIDToIndex - Mapping between region ID (string) and object ID (index)
  * @property {Object{}} regionUtils._regionIndexToID - Mapping between object ID (index) and region ID (string)
 */
-const regionUtils = {
+regionUtils = {
     _isNewRegion: true,
     _currentlyDrawing: false,
     _currentRegionId: 0,
@@ -1872,5 +1872,3 @@ regionUtils._generateRegionToColorLUT = function() {
     }
     console.assert(regionUtils._regionToColorLUT.length == (objectID * 4));
 }
-
-export default regionUtils
