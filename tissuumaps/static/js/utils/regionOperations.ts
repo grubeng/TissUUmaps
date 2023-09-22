@@ -7,23 +7,23 @@ regionUtils.regionToolbarOnOff = function () {
   // Add region Toolbar
   regionUtils.addRegionToolbarUI();
   const op = tmapp["object_prefix"];
-  
+
   if (!overlayUtils._regionToolbar) {
     regionUtils.resetSelection();
     if (overlayUtils._drawRegions) {
-        regionUtils.regionsOnOff();
+      regionUtils.regionsOnOff();
     }
     if (overlayUtils._freeHandDrawRegions) {
-        regionUtils.freeHandRegionsOnOff();
+      regionUtils.freeHandRegionsOnOff();
     }
     if (overlayUtils._brushDrawRegions) {
-        regionUtils.brushRegionsOnOff();
+      regionUtils.brushRegionsOnOff();
     }
     if (overlayUtils._regionSelection) {
-        regionUtils.selectRegionsOnOff();
+      regionUtils.selectRegionsOnOff();
     }
   }
-}
+};
 
 /**
  * @summary Draws a path given a set of points and an Id
@@ -42,7 +42,8 @@ regionUtils.drawRegionPath = function (
     overlayUtils._d3nodes[tmapp["object_prefix"] + "_regions_svgnode"].node();
   const canvas = d3.select(canvasNode);
   const strokeWstr =
-    2.5 * regionUtils._polygonStrokeWidth / tmapp["ISS_viewer"].viewport.getZoom();
+    (2.5 * regionUtils._polygonStrokeWidth) /
+    tmapp["ISS_viewer"].viewport.getZoom();
   canvas
     .append("path")
     .attr("d", regionUtils.pointsToPath(points))
@@ -122,7 +123,10 @@ regionUtils.duplicateRegions = function (regions) {
   regions.forEach((region) => {
     const newRegionId = "region" + (regionUtils._currentRegionId + 1);
     regionUtils._currentRegionId++;
-    let viewportPoints = regionUtils.globalPointsToViewportPoints(region.globalPoints, region.collectionIndex);
+    let viewportPoints = regionUtils.globalPointsToViewportPoints(
+      region.globalPoints,
+      region.collectionIndex
+    );
     regionUtils.addRegion(
       regionUtils.objectToArrayPoints(viewportPoints),
       newRegionId,
@@ -144,17 +148,28 @@ regionUtils.clipperPolygons = function (polygons, operation) {
   let subject = null;
   let capitalConversion = "x" in polygons[0][0][0][0];
   for (let i = 0; i < polygons.length; i++) {
-      if (subject == null) {
-        subject = new clipperShape (polygons[i].flat(), closed = true, capitalConversion = capitalConversion, integerConversion = false, removeDuplicates = false)
-      }
-      else {
-        let path2 = new clipperShape (polygons[i].flat(), closed = true, capitalConversion = capitalConversion, integerConversion = false, removeDuplicates = false)
-        subject =  subject[operation](path2);
-      }
+    if (subject == null) {
+      subject = new clipperShape(
+        polygons[i].flat(),
+        (closed = true),
+        (capitalConversion = capitalConversion),
+        (integerConversion = false),
+        (removeDuplicates = false)
+      );
+    } else {
+      let path2 = new clipperShape(
+        polygons[i].flat(),
+        (closed = true),
+        (capitalConversion = capitalConversion),
+        (integerConversion = false),
+        (removeDuplicates = false)
+      );
+      subject = subject[operation](path2);
+    }
   }
   let separatePaths = subject.separateShapes().map((path) => path.paths);
   return separatePaths;
-}
+};
 
 /**
  * Run clipper binary operation on a set of regions
@@ -163,8 +178,7 @@ regionUtils.clipperRegions = function (regions, operation) {
   const polygons = regions.map((region) => region.globalPoints);
   const solution_paths = regionUtils.clipperPolygons(polygons, operation);
   return regionUtils.regionToLowerCase(solution_paths);
-}
-
+};
 
 /**
  * @summary Generates a region that covers the instersection of the passed regions
@@ -186,7 +200,7 @@ regionUtils.regionsClipper = function (regions, operation) {
       regionUtils.deleteRegion(region.id, true);
     });
     regionUtils.updateAllRegionClassUI();
-  } catch (error){
+  } catch (error) {
     console.log(error);
     interfaceUtils.alert(
       "The selected regions have no interception between them"
@@ -209,9 +223,7 @@ regionUtils.resizeRegion = function (regionId, scale, preview) {
   const region = regionUtils._regions[regionId];
   const scaleFactor = scale / 100;
   let globalPoints = region.globalPoints;
-  const points = regionUtils.objectToArrayPoints(
-    globalPoints
-  );
+  const points = regionUtils.objectToArrayPoints(globalPoints);
 
   //Iterate through each of the polygons in the multipolygon
   for (let i = 0; i < points.length; i++) {
@@ -226,15 +238,11 @@ regionUtils.resizeRegion = function (regionId, scale, preview) {
         point[0] =
           centroidBefore[0] +
           ((point[0] - centroidBefore[0]) * scaleFactor) /
-            (region.scale
-              ? region.scale / 100
-              : 1);
+            (region.scale ? region.scale / 100 : 1);
         point[1] =
           centroidBefore[1] +
           ((point[1] - centroidBefore[1]) * scaleFactor) /
-            (region.scale
-              ? region.scale / 100
-              : 1);
+            (region.scale ? region.scale / 100 : 1);
       }
     }
 
@@ -257,12 +265,15 @@ regionUtils.resizeRegion = function (regionId, scale, preview) {
   d3.select("#" + escapedRegionId + "preview" + "_poly").remove();
   if (preview) {
     regionUtils.drawRegionPath(
-      regionUtils.globalPointsToViewportPoints(newGlobalPoints, region.collectionIndex),
+      regionUtils.globalPointsToViewportPoints(
+        newGlobalPoints,
+        region.collectionIndex
+      ),
       escapedRegionId + "preview",
-      null, "#ffffff99"
+      null,
+      "#ffffff99"
     );
-  }
-  else {
+  } else {
     // Save new region scale and points
     region.scale = scale;
     // TODO - replace .points with globalPoints?
@@ -272,8 +283,7 @@ regionUtils.resizeRegion = function (regionId, scale, preview) {
     regionUtils.selectRegion(region);
     regionUtils.updateBbox(region);
   }
-  
-  
+
   // Returns the center of a given polygon
   function calculatePolygonCentroid(polygon) {
     let sumX = 0;
@@ -298,14 +308,20 @@ regionUtils.resizeRegion = function (regionId, scale, preview) {
 regionUtils.dilateRegion = function (regionId, offset, preview, onlyBorder) {
   if (!offset) return;
   const options = {
-    jointType : 'jtRound',
-    endType : 'etClosedPolygon',
-    miterLimit : 2.0,
-    roundPrecision : 0.25
-  }
+    jointType: "jtRound",
+    endType: "etClosedPolygon",
+    miterLimit: 2.0,
+    roundPrecision: 0.25,
+  };
   const region = regionUtils._regions[regionId];
-  const path = new clipperShape (region.globalPoints.flat(), closed = true, capitalConversion = true, integerConversion = false, removeDuplicates = false)
-  let pathOut = path.offset( offset, options);
+  const path = new clipperShape(
+    region.globalPoints.flat(),
+    (closed = true),
+    (capitalConversion = true),
+    (integerConversion = false),
+    (removeDuplicates = false)
+  );
+  let pathOut = path.offset(offset, options);
   let dilatedPoints = null;
   if (onlyBorder) {
     pathOut = pathOut.xor(path);
@@ -317,18 +333,20 @@ regionUtils.dilateRegion = function (regionId, offset, preview, onlyBorder) {
   d3.select("#" + escapedRegionId + "preview" + "_poly").remove();
   if (preview) {
     regionUtils.drawRegionPath(
-      regionUtils.globalPointsToViewportPoints(dilatedPoints, region.collectionIndex),
+      regionUtils.globalPointsToViewportPoints(
+        dilatedPoints,
+        region.collectionIndex
+      ),
       escapedRegionId + "preview"
     );
-  }
-  else {
+  } else {
     region.globalPoints = dilatedPoints;
     regionUtils.updateBbox(region);
-    
+
     regionUtils.deSelectRegion(region.id);
     regionUtils.selectRegion(region);
   }
-}
+};
 
 /**
  * @summary Converts Object based points into GeoJson format points
@@ -342,8 +360,8 @@ regionUtils.objectToArrayPoints = function (points) {
 
 /**
  * @summary Converts clipper-js with upper case X and Y to lower cas x and y for GeoJSON
- * @param {*} points  
- * @returns 
+ * @param {*} points
+ * @returns
  */
 regionUtils.regionToLowerCase = function (points) {
   return points.map((arr) =>
@@ -360,8 +378,8 @@ regionUtils.regionToLowerCase = function (points) {
 
 /**
  * @summary Converts GeoJSON with lower cas x and y to upper case X and Y for clipper-js
- * @param {*} points  
- * @returns 
+ * @param {*} points
+ * @returns
  */
 regionUtils.regionToUpperCase = function (points) {
   return points.map((arr) =>
@@ -418,14 +436,23 @@ regionUtils.stringToFloatPoints = function (points) {
  */
 regionUtils.selectRegion = function (region, skipHighlight) {
   const escapedRegionId = HTMLElementUtils.stringToId(region.id);
-  const regionClassID = HTMLElementUtils.stringToId("region_" + region.regionClass);
+  const regionClassID = HTMLElementUtils.stringToId(
+    "region_" + region.regionClass
+  );
 
   regionUtils._selectedRegions[region.id] = region;
-  let points = regionUtils.globalPointsToViewportPoints(region.globalPoints, region.collectionIndex);
-  regionUtils.drawRegionPath(points, escapedRegionId + "_selected", "#0165fc")
-  const checkBox = document.getElementById(`${escapedRegionId}_selection_check`);
+  let points = regionUtils.globalPointsToViewportPoints(
+    region.globalPoints,
+    region.collectionIndex
+  );
+  regionUtils.drawRegionPath(points, escapedRegionId + "_selected", "#0165fc");
+  const checkBox = document.getElementById(
+    `${escapedRegionId}_selection_check`
+  );
   if (checkBox) checkBox.checked = true;
-  if (!skipHighlight) {regionUtils.highlightRegion(region.id)};
+  if (!skipHighlight) {
+    regionUtils.highlightRegion(region.id);
+  }
   regionUtils.addRegionToolbarUI();
 };
 
@@ -434,35 +461,44 @@ regionUtils.selectRegion = function (region, skipHighlight) {
  * @param {*} regionid ID of region to be highlighted
  */
 regionUtils.highlightRegion = function (regionid) {
-    // Highlight region in right panel
-    const region = regionUtils._regions[regionid];
-    const escapedRegionId = HTMLElementUtils.stringToId(region.id);
-    const regionClassID = HTMLElementUtils.stringToId("region_" + region.regionClass);
-    const collapsibleRow = $(`#collapse_region_${regionClassID}`);
+  // Highlight region in right panel
+  const region = regionUtils._regions[regionid];
+  const escapedRegionId = HTMLElementUtils.stringToId(region.id);
+  const regionClassID = HTMLElementUtils.stringToId(
+    "region_" + region.regionClass
+  );
+  const collapsibleRow = $(`#collapse_region_${regionClassID}`);
 
-    if (collapsibleRow) collapsibleRow.collapse("show");
-    setTimeout(() => {
-        var tr = document.querySelectorAll('[data-escapedid="'+escapedRegionId+'"]')[0];
-        if (tr != null) {
-            tr.scrollIntoView({block: "nearest",inline: "nearest"});
-            tr.classList.remove("transition_background")
-            tr.classList.add("table-primary")
-            setTimeout(function(){tr.classList.add("transition_background");tr.classList.remove("table-primary");},400);
-        }
-    },200)
-}
+  if (collapsibleRow) collapsibleRow.collapse("show");
+  setTimeout(() => {
+    var tr = document.querySelectorAll(
+      '[data-escapedid="' + escapedRegionId + '"]'
+    )[0];
+    if (tr != null) {
+      tr.scrollIntoView({ block: "nearest", inline: "nearest" });
+      tr.classList.remove("transition_background");
+      tr.classList.add("table-primary");
+      setTimeout(function () {
+        tr.classList.add("transition_background");
+        tr.classList.remove("table-primary");
+      }, 400);
+    }
+  }, 200);
+};
 
 /**
  * @summary Removes a region to selected list
  * @param {*} region Region to be removed from selection collection
  */
 regionUtils.deSelectRegion = function (regionId) {
-    const escapedRegionId = HTMLElementUtils.stringToId(regionId);
-    delete regionUtils._selectedRegions[regionId];
-    d3.select("#" + escapedRegionId + "_selected" + "_poly").remove();
-    const checkBox = document.getElementById(`${escapedRegionId}_selection_check`);
-    if (checkBox) checkBox.checked = false;
-    regionUtils.addRegionToolbarUI();
+  const escapedRegionId = HTMLElementUtils.stringToId(regionId);
+  delete regionUtils._selectedRegions[regionId];
+  d3.select("#" + escapedRegionId + "_selected" + "_poly").remove();
+  const checkBox = document.getElementById(
+    `${escapedRegionId}_selection_check`
+  );
+  if (checkBox) checkBox.checked = false;
+  regionUtils.addRegionToolbarUI();
 };
 
 /**
@@ -472,7 +508,9 @@ regionUtils.resetSelection = function () {
   const selectedRegions = Object.values(regionUtils._selectedRegions);
   selectedRegions.forEach((region) => {
     const escapedRegionId = HTMLElementUtils.stringToId(region.id);
-    const checkBox = document.getElementById(`${escapedRegionId}_selection_check`);
+    const checkBox = document.getElementById(
+      `${escapedRegionId}_selection_check`
+    );
     if (checkBox) checkBox.checked = false;
     d3.select("#" + escapedRegionId + "_selected" + "_poly").remove();
   });

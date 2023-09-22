@@ -228,48 +228,50 @@ customElementUtils.textInputSelect = function (
   return div;
 };
 
-customElementUtils.dropDownButton = function(params, text, options) {
-    if (!params) {
-        console.log(params)
-        const button = document.createElement("button");
-        button.innerHTML = "unnamed";
-        return button;
-    }
-    const container = document.createElement("div");
-    const list = document.createElement("ul");
+customElementUtils.dropDownButton = function (params, text, options) {
+  if (!params) {
+    console.log(params);
     const button = document.createElement("button");
-    button.innerText = text;
-    button.setAttribute("aria-expanded", false);
-    button.setAttribute("data-bs-toggle", "dropdown");
-    (params.id || null ? button.setAttribute("id", params.id) : null);
-    (params.innerText || null ? button.innerHTML = params.innerText : null);
-    (params["class"] || null ? button.setAttribute("class", params["class"]) : null);
-   
-    const eventListeners = params.eventListeners
-    if (eventListeners) {
-        for (let message in eventListeners) {
-            button.addEventListener(message, eventListeners[message]);
-        }
+    button.innerHTML = "unnamed";
+    return button;
+  }
+  const container = document.createElement("div");
+  const list = document.createElement("ul");
+  const button = document.createElement("button");
+  button.innerText = text;
+  button.setAttribute("aria-expanded", false);
+  button.setAttribute("data-bs-toggle", "dropdown");
+  params.id || null ? button.setAttribute("id", params.id) : null;
+  params.innerText || null ? (button.innerHTML = params.innerText) : null;
+  params["class"] || null
+    ? button.setAttribute("class", params["class"])
+    : null;
+
+  const eventListeners = params.eventListeners;
+  if (eventListeners) {
+    for (let message in eventListeners) {
+      button.addEventListener(message, eventListeners[message]);
     }
-    if (params.extraAttributes) {
-        for (let attr in params.extraAttributes) {
-            button.setAttribute(attr, params.extraAttributes[attr]);
-        }
+  }
+  if (params.extraAttributes) {
+    for (let attr in params.extraAttributes) {
+      button.setAttribute(attr, params.extraAttributes[attr]);
     }
-    list.classList.add("dropdown-menu")
-    button.classList.add("dropdown-toggle");
-    button.style.height = "100%";
-    if(options){
-        options.forEach((option) => {
-            const optionItem = document.createElement("li");
-            optionItem.innerHTML = option.text;
-            optionItem.id = option.id;
-            optionItem.classList.add("dropdown-item");
-            optionItem[option.event] = option.handler;
-            list.appendChild(optionItem)
-        })
-    }
-    container.appendChild(button)
-    container.appendChild(list)
-    return container;
-}
+  }
+  list.classList.add("dropdown-menu");
+  button.classList.add("dropdown-toggle");
+  button.style.height = "100%";
+  if (options) {
+    options.forEach((option) => {
+      const optionItem = document.createElement("li");
+      optionItem.innerHTML = option.text;
+      optionItem.id = option.id;
+      optionItem.classList.add("dropdown-item");
+      optionItem[option.event] = option.handler;
+      list.appendChild(optionItem);
+    });
+  }
+  container.appendChild(button);
+  container.appendChild(list);
+  return container;
+};

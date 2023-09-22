@@ -1,19 +1,19 @@
-require("./utils/regionUtils.ts")
-require("./utils/customElementUtils.ts")
-require("./utils/dataUtils.ts")
-require("./utils/filterUtils.ts")
-require("./utils/HTMLElementUtils.ts")
-require("./utils/interfaceUtils.ts")
-require("./utils/markerUtils.ts")
-require("./utils/OSDViewerUtils.ts")
-require("./utils/overlayUtils.ts")
-require("./utils/pluginUtils.ts")
-require("./utils/projectUtils.ts")
-require("./utils/regionOperations.ts")
-require("./utils/regionOperationsUI.ts")
-require("./utils/glUtils.ts")
-require("./tmapp.ts")
-require("./flask.ts")
-h5Utils = require("./utils/h5Utils.ts").default
-H5AD_API = require("./utils/h5Utils.ts").H5AD_API
-H5_API = require("./utils/h5Utils.ts").H5_API
+require("./utils/regionUtils.ts");
+require("./utils/customElementUtils.ts");
+require("./utils/dataUtils.ts");
+require("./utils/filterUtils.ts");
+require("./utils/HTMLElementUtils.ts");
+require("./utils/interfaceUtils.ts");
+require("./utils/markerUtils.ts");
+require("./utils/OSDViewerUtils.ts");
+require("./utils/overlayUtils.ts");
+require("./utils/pluginUtils.ts");
+require("./utils/projectUtils.ts");
+require("./utils/regionOperations.ts");
+require("./utils/regionOperationsUI.ts");
+require("./utils/glUtils.ts");
+require("./tmapp.ts");
+require("./flask.ts");
+h5Utils = require("./utils/h5Utils.ts").default;
+H5AD_API = require("./utils/h5Utils.ts").H5AD_API;
+H5_API = require("./utils/h5Utils.ts").H5_API;
