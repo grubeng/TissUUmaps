@@ -6,7 +6,7 @@
  * @namespace customElementUtils
  */
 
-customElementUtils = {};
+const customElementUtils = {};
 
 /**
  * @param id Input id
@@ -273,3 +273,5 @@ customElementUtils.dropDownButton = function(params, text, options) {
     container.appendChild(list)
     return container;
 }
+
+export default customElementUtils

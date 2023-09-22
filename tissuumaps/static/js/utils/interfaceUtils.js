@@ -6,7 +6,7 @@
 /**
 * @namespace interfaceUtils
 */
-interfaceUtils={}
+const interfaceUtils={}
 
 
 /** 
@@ -545,26 +545,26 @@ interfaceUtils.generateDataTabUI = function(options){
         generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
     }
     if (! dataUtils.data[generated]) {
-        divpane=interfaceUtils._mGenUIFuncs.generateTab();
-        accordion=interfaceUtils._mGenUIFuncs.generateAccordion();
+        let divpane=interfaceUtils._mGenUIFuncs.generateTab();
+        let accordion=interfaceUtils._mGenUIFuncs.generateAccordion();
         
         //now that the 3 accordion items are created, fill tehm and 
         //add all to the corresponding main data tab
 
-        item1rows=interfaceUtils._mGenUIFuncs.generateAccordionItem1();
+        let item1rows=interfaceUtils._mGenUIFuncs.generateAccordionItem1();
         item1rows.forEach(row => accordion.contents[0].appendChild(row))
 
-        item2rows=interfaceUtils._mGenUIFuncs.generateAccordionItem2();
+        let item2rows=interfaceUtils._mGenUIFuncs.generateAccordionItem2();
         item2rows.forEach(row => accordion.contents[1].appendChild(row))
 
-        item3rows=interfaceUtils._mGenUIFuncs.generateAccordionItem3();
+        let item3rows=interfaceUtils._mGenUIFuncs.generateAccordionItem3();
         item3rows.forEach(row => accordion.contents[2].appendChild(row))
 
-        buttonrow=interfaceUtils._mGenUIFuncs.generateRowOptionsButtons();
+        let buttonrow=interfaceUtils._mGenUIFuncs.generateRowOptionsButtons();
 
-        menurow=interfaceUtils._mGenUIFuncs.rowForMarkerUI();
+        let menurow=interfaceUtils._mGenUIFuncs.rowForMarkerUI();
 
-        togglerow=HTMLElementUtils.createElement({"kind":"div", "extraAttributes":{"class":"row"}});
+        let togglerow=HTMLElementUtils.createElement({"kind":"div", "extraAttributes":{"class":"row"}});
         var divpane_settings_toggle = HTMLElementUtils.createElement({"kind":"div", "id":generated+"_marker-tab-settings-toggle", "extraAttributes":{"class":"d-none w-auto ms-auto btn btn-light btn-sm mx-3"}});
         divpane_settings_toggle.innerHTML = "<i class='bi bi-sliders'></i>";
         divpane_settings_toggle.addEventListener("click",function(event) {
@@ -580,14 +580,14 @@ interfaceUtils.generateDataTabUI = function(options){
         divpane.append(togglerow)
 
         //row progressbar
-        row0=HTMLElementUtils.createRow({id:generated+"_csv_progress_parent"});
+        let row0=HTMLElementUtils.createRow({id:generated+"_csv_progress_parent"});
         row0.classList.add("d-none");
         row0.classList.add("px-3");
         row0.innerHTML="Loading markers..."
 
-        col01=HTMLElementUtils.createColumn({"width":12});
-            div011=HTMLElementUtils.createElement({"kind":"div", "extraAttributes":{"class":"progress"}});
-                div0111=HTMLElementUtils.createElement({"kind":"div", "id":generated+"_csv_progress", "extraAttributes":{"class":"progress-bar progress-bar-striped progress-bar-animated","role":"progressbar" ,"aria-valuenow":"10", "aria-valuemin":"0" ,"aria-valuemax":"100"}});
+        let col01=HTMLElementUtils.createColumn({"width":12});
+            let div011=HTMLElementUtils.createElement({"kind":"div", "extraAttributes":{"class":"progress"}});
+                let div0111=HTMLElementUtils.createElement({"kind":"div", "id":generated+"_csv_progress", "extraAttributes":{"class":"progress-bar progress-bar-striped progress-bar-animated","role":"progressbar" ,"aria-valuenow":"10", "aria-valuemin":"0" ,"aria-valuemax":"100"}});
         
         row0.appendChild(col01)
             col01.appendChild(div011)
@@ -598,7 +598,7 @@ interfaceUtils.generateDataTabUI = function(options){
         divpane.append(divpane_settings)
         divpane.appendChild(menurow);
 
-        tabs1content=interfaceUtils.getElementById("level-1-tabsContent");
+        let tabs1content=interfaceUtils.getElementById("level-1-tabsContent");
         if(tabs1content) tabs1content.appendChild(divpane);
         else { console.log("No level 1 tab content"); return;}
     }
@@ -607,9 +607,9 @@ interfaceUtils.generateDataTabUI = function(options){
         console.log("options are here:");
         console.log(JSON.stringify(options));
         if (options.hideSettings) {
-            divpane_settings = interfaceUtils.getElementById(generated+"_marker-tab-settings");
+            let divpane_settings = interfaceUtils.getElementById(generated+"_marker-tab-settings");
             divpane_settings.classList.add("d-none");
-            divpane_settings_toggle = interfaceUtils.getElementById(generated+"_marker-tab-settings-toggle");
+            let divpane_settings_toggle = interfaceUtils.getElementById(generated+"_marker-tab-settings-toggle");
             divpane_settings_toggle.classList.remove("d-none");
         }
         interfaceUtils._mGenUIFuncs.ChangeTabName(generated, options.name);
@@ -639,18 +639,18 @@ interfaceUtils._mGenUIFuncs={ctx:{aUUID:0}}
 * @param {HTMLEvent} event event that triggered function
 * @summary Delete all trace of a tab including datautils.data.key*/
 interfaceUtils._mGenUIFuncs.deleteTab=function(uid){
-    tabbutton=interfaceUtils.getElementById(uid+"_li-tab")
+    let tabbutton=interfaceUtils.getElementById(uid+"_li-tab")
     if (!tabbutton) {return;}
     tabbutton.remove();
 
-    tabpane=interfaceUtils.getElementById(uid+"_marker-pane")
+    let tabpane=interfaceUtils.getElementById(uid+"_marker-pane")
     tabpane.remove();
     projectUtils.removeTabFromProject(uid);
     delete dataUtils.data[uid];
 
     glUtils.deleteMarkers(uid);
     glUtils.draw();
-    tabButtons = interfaceUtils.getElementsByClassName("marker-tab-button")
+    let tabButtons = interfaceUtils.getElementsByClassName("marker-tab-button")
     if (tabButtons.length > 0) {
         tabButtons[tabButtons.length - 1].click();
     }
@@ -717,10 +717,10 @@ interfaceUtils._mGenUIFuncs.dataTabUIToH5 = function(uid){
 * @param {Array.Number} option this option will be shown while all others are hidden
 * @summary This function takes options within one specific tab and hide all except the one marked by option */
 interfaceUtils._mGenUIFuncs.hideShow=function(event,array,options){
-    uid=event.target.id.split("_")[0]
+    let uid=event.target.id.split("_")[0]
     array.forEach((domid, index)=>{
-        newdomid=uid+domid;
-        domelement=interfaceUtils.getElementById(newdomid);
+        let newdomid=uid+domid;
+        let domelement=interfaceUtils.getElementById(newdomid);
         if(domelement){
             if(options.includes(index)){
                 domelement.classList.remove("d-none");
@@ -737,10 +737,10 @@ interfaceUtils._mGenUIFuncs.hideShow=function(event,array,options){
 * @param {Number} option this option will be selected while all others are unselected
 * @summary This function takes options within one specific tab and deselects all except the one marked by option */
 interfaceUtils._mGenUIFuncs.selectDeselect=function(event,array,options){
-    uid=event.target.id.split("_")[0]
+    let uid=event.target.id.split("_")[0]
     array.forEach((domid, index)=>{
-        newdomid=uid+domid;
-        domelement=interfaceUtils.getElementById(newdomid);
+        let newdomid=uid+domid;
+        let domelement=interfaceUtils.getElementById(newdomid);
         if(domelement){
             if(options.includes(index)){
                 domelement.checked=true;
@@ -757,10 +757,10 @@ interfaceUtils._mGenUIFuncs.selectDeselect=function(event,array,options){
 * @param {Number} option this option will be enabled while all others are disabled
 * @summary This function takes options within one specific tab and disables all except the one marked by option */
 interfaceUtils._mGenUIFuncs.enableDisable=function(event,array,options){
-    uid=event.target.id.split("_")[0];
+    let uid=event.target.id.split("_")[0];
     array.forEach((domid, index)=>{
-        newdomid=uid+domid;
-        domelement=interfaceUtils.getElementById(newdomid);
+        let newdomid=uid+domid;
+        let domelement=interfaceUtils.getElementById(newdomid);
         //console.log(domelement,index,options,(index in options).toString())
         if(domelement){
             if(options.includes(index)){
@@ -776,7 +776,7 @@ interfaceUtils._mGenUIFuncs.enableDisable=function(event,array,options){
 * @param {HTMLEvent} event event that triggered function
 * @summary Chages the name of the tab if this text in the form has changed */
 interfaceUtils._mGenUIFuncs.ChangeTabName=function(uid, value){
-    domelement=interfaceUtils.getElementById(uid+"_marker-tab-name");
+    let domelement=interfaceUtils.getElementById(uid+"_marker-tab-name");
     if(domelement){
         if(value)
             domelement.innerText=value
@@ -791,7 +791,7 @@ interfaceUtils._mGenUIFuncs.ChangeTabName=function(uid, value){
 * @param {HTMLEvent} event event that triggered function
 * @summary Chages the name of the tab if this text in the form has changed */
 interfaceUtils._mGenUIFuncs.ActivateTab=function(uid){
-    domelement=interfaceUtils.getElementById(uid+"_marker-tab-button");
+    let domelement=interfaceUtils.getElementById(uid+"_marker-tab-button");
     if(domelement){
         domelement.click();
     }
@@ -882,7 +882,7 @@ interfaceUtils._mGenUIFuncs.getTabRadiosAndChecks= function(uid){
     var radios=interfaceUtils._mGenUIFuncs.getTabRadiosAndChecks(uid)
     var arechecked={};
 
-    for(r in radios){
+    for(let r in radios){
         arechecked[r]=radios[r].checked
     }
     
@@ -896,7 +896,7 @@ interfaceUtils._mGenUIFuncs.getTabRadiosAndChecks= function(uid){
 interfaceUtils._mGenUIFuncs.generateUUID=function(){
     //HAS TO START with letter
     //aUUID="U12345";
-    aUUID='Uxxxxx'.replace(/[x]/g, function(c) {
+    let aUUID='Uxxxxx'.replace(/[x]/g, function(c) {
     var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
     });
@@ -919,14 +919,14 @@ interfaceUtils._mGenUIFuncs.generateTab=function(){
     */
     
     //first thing is to add the tab in the level 1. Which is a li with a button
-    li1=HTMLElementUtils.createElement({"kind":"li", "id":generated+"_li-tab", "extraAttributes":{ "class":"nav-item", "role":"presentation"}});
-    button1=HTMLElementUtils.createButton({"id":generated+"_marker-tab-button","extraAttributes":{ "class":"nav-link marker-tab-button", "data-bs-toggle":"tab","data-bs-target":"#"+generated+"_marker-pane","type":"button","role":"tab","aria-controls":generated+"_marker","aria-selected":"false"}})
+    let li1=HTMLElementUtils.createElement({"kind":"li", "id":generated+"_li-tab", "extraAttributes":{ "class":"nav-item", "role":"presentation"}});
+    let button1=HTMLElementUtils.createButton({"id":generated+"_marker-tab-button","extraAttributes":{ "class":"nav-link marker-tab-button", "data-bs-toggle":"tab","data-bs-target":"#"+generated+"_marker-pane","type":"button","role":"tab","aria-controls":generated+"_marker","aria-selected":"false"}})
 
-    span1=HTMLElementUtils.createElement({"kind":"span", "id":generated+"_marker-tab-name","extraAttributes":{ "title": "New markers"}})
+    let span1=HTMLElementUtils.createElement({"kind":"span", "id":generated+"_marker-tab-name","extraAttributes":{ "title": "New markers"}})
     span1.innerHTML="New markers";
 
     button1.appendChild(span1);
-    closeButton=HTMLElementUtils.createElement({"kind":"a", "id":generated+"_marker-tab-close"})
+    let closeButton=HTMLElementUtils.createElement({"kind":"a", "id":generated+"_marker-tab-close"})
     closeButton.innerHTML="&nbsp;&nbsp;<i class='bi bi-x'></i>";
     button1.appendChild(closeButton);
     closeButton.addEventListener("click",function(event) {
@@ -938,8 +938,8 @@ interfaceUtils._mGenUIFuncs.generateTab=function(){
 
 
     li1.appendChild(button1);
-    ultabs1=interfaceUtils.getElementById("level-1-tabs");
-    plusone=interfaceUtils.getElementById("plus-1");
+    let ultabs1=interfaceUtils.getElementById("level-1-tabs");
+    let plusone=interfaceUtils.getElementById("plus-1");
     if(plusone && ultabs1) ultabs1.insertBefore(li1,plusone);
     else { console.log("No level 1 tabs"); return;}
 
@@ -948,7 +948,7 @@ interfaceUtils._mGenUIFuncs.generateTab=function(){
     */
     //now the content of that tab pane which is a form like group to select the options for rendering
     //1.1
-    divpane=HTMLElementUtils.createElement({"kind":"div", "id":generated+"_marker-pane", "extraAttributes":{  "class":"tab-pane",  "role":"tabpanel", "aria-labelledby":generated+"_marker-tab"}});
+    let divpane=HTMLElementUtils.createElement({"kind":"div", "id":generated+"_marker-pane", "extraAttributes":{  "class":"tab-pane",  "role":"tabpanel", "aria-labelledby":generated+"_marker-tab"}});
 
     //return this pane
     return divpane;
@@ -961,21 +961,21 @@ interfaceUtils._mGenUIFuncs.generateTab=function(){
  */
 interfaceUtils._mGenUIFuncs.generateAccordion=function(){
 
-    generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
+    let generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
     /** 
      * MAIN ACCORDION
     */
     //inside the pane put an accordion with 3 accordion-items to put the options
-    divaccordion=HTMLElementUtils.createElement({"kind":"div","id":generated+"_accordion-flush","extraAttributes":{"class":"accordion accordion-flush"}})
+    let divaccordion=HTMLElementUtils.createElement({"kind":"div","id":generated+"_accordion-flush","extraAttributes":{"class":"accordion accordion-flush"}})
 
     //now 3 accordion items
-    accordionitems=[];
-    accordioncontents=[];
+    let accordionitems=[];
+    let accordioncontents=[];
     ["File and coordinates","Render options","Advanced options"].forEach(function(title,index){
-        divaccordionitem=HTMLElementUtils.createElement({ "kind":"div","extraAttributes":{"class":"accordion-item"}});
-        h2accordionitem=HTMLElementUtils.createElement({ "kind":"h2","id":"flush-heading"+index.toString(),"extraAttributes":{"class":"accordion-header"}});
-        buttonaccordionitem=HTMLElementUtils.createElement({ "kind":"button", "extraAttributes":{ "class":"accordion-button collapsed", "type":"button", "data-bs-toggle":"collapse", "data-bs-target":"#"+generated+"_flush-collapse"+index.toString(), "aria-expanded":"false", "aria-controls":generated+"_flush-collapse"+index.toString()}})
-        divaccordioncontent=HTMLElementUtils.createElement({ "kind":"div", "id":generated+"_flush-collapse"+index.toString(), "extraAttributes":{ "class":"accordion-collapse collapse tm-accordion-collapse py-2", "data-bs-parent":"#"+generated+"_accordion-flush", "aria-labelledby":"flush-heading"+index.toString()}})
+        let divaccordionitem=HTMLElementUtils.createElement({ "kind":"div","extraAttributes":{"class":"accordion-item"}});
+        let h2accordionitem=HTMLElementUtils.createElement({ "kind":"h2","id":"flush-heading"+index.toString(),"extraAttributes":{"class":"accordion-header"}});
+        let buttonaccordionitem=HTMLElementUtils.createElement({ "kind":"button", "extraAttributes":{ "class":"accordion-button collapsed", "type":"button", "data-bs-toggle":"collapse", "data-bs-target":"#"+generated+"_flush-collapse"+index.toString(), "aria-expanded":"false", "aria-controls":generated+"_flush-collapse"+index.toString()}})
+        let divaccordioncontent=HTMLElementUtils.createElement({ "kind":"div", "id":generated+"_flush-collapse"+index.toString(), "extraAttributes":{ "class":"accordion-collapse collapse tm-accordion-collapse py-2", "data-bs-parent":"#"+generated+"_accordion-flush", "aria-labelledby":"flush-heading"+index.toString()}})
         buttonaccordionitem.innerText=title;
 
         h2accordionitem.appendChild(buttonaccordionitem);
@@ -1000,47 +1000,47 @@ interfaceUtils._mGenUIFuncs.generateAccordion=function(){
  */
 interfaceUtils._mGenUIFuncs.generateAccordionItem1=function(){
 
-    generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
+    let generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
     
     
     //row 1
-    row1=HTMLElementUtils.createRow({id:generated+"_row-1"});
-        col11=HTMLElementUtils.createColumn({"width":6, "id":generated+"_input_csv_col"});
-            div111=HTMLElementUtils.createElement({"kind":"div", "id":generated+"_input_csv"});
-                label1111=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"for":generated+"_csv"}});
+    let row1=HTMLElementUtils.createRow({id:generated+"_row-1"});
+        let col11=HTMLElementUtils.createColumn({"width":6, "id":generated+"_input_csv_col"});
+            let div111=HTMLElementUtils.createElement({"kind":"div", "id":generated+"_input_csv"});
+                let label1111=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"for":generated+"_csv"}});
                 label1111.innerText="File and coordinates";
-                input1112=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_csv","extraAttributes":{ "name":generated+"_csv", 
+                let input1112=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_csv","extraAttributes":{ "name":generated+"_csv", 
                 "class":"form-control-file form-control form-control-sm", "type":"file", "accept":".csv,.tsv,.txt,.h5,.h5ad"}});
                 input1112.addEventListener("change",(event)=>{dataUtils.startCSVcascade(event)});
     
     //---------------------------------
 
-    col12=HTMLElementUtils.createColumn({"width":6});
-        div121=HTMLElementUtils.createElement({"kind":"div","id":"input-group"});
-            label1221=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"for":generated+"_tab-name"}});
+    let col12=HTMLElementUtils.createColumn({"width":6});
+        let div121=HTMLElementUtils.createElement({"kind":"div","id":"input-group"});
+            let label1221=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"for":generated+"_tab-name"}});
             label1221.innerText="Tab name";
-            input1222=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_tab-name", "extraAttributes":{ "name":generated+"_tab-name", "class":"form-control","type":"text", "placeholder":"New markers", "value":"New markers","aria-label":"Tab name" }});
+            let input1222=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_tab-name", "extraAttributes":{ "name":generated+"_tab-name", "class":"form-control","type":"text", "placeholder":"New markers", "value":"New markers","aria-label":"Tab name" }});
             input1222.innerText=generated; 
             input1222.addEventListener("change",(event)=>{interfaceUtils._mGenUIFuncs.ChangeTabName(event.target.name.split("_")[0], event.target.value);})
 
     ///ROW 2
 
-    row2=HTMLElementUtils.createRow({"id":generated+"_row-2"});
-        col21=HTMLElementUtils.createColumn({"width":6});
-            label211=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_x-label", "extraAttributes":{ "for":generated+"_x-value" }});
+    let row2=HTMLElementUtils.createRow({"id":generated+"_row-2"});
+        let col21=HTMLElementUtils.createColumn({"width":6});
+            let label211=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_x-label", "extraAttributes":{ "for":generated+"_x-value" }});
             label211.innerText="X coordinate"
-            select212=HTMLElementUtils.createElement({"kind":"select", "id":generated+"_x-value", "extraAttributes":{ "class":"form-select form-select-sm", "aria-label":".form-select-sm"}});
+            let select212=HTMLElementUtils.createElement({"kind":"select", "id":generated+"_x-value", "extraAttributes":{ "class":"form-select form-select-sm", "aria-label":".form-select-sm"}});
 
-        col22=HTMLElementUtils.createColumn({"width":6});
-            label221=HTMLElementUtils.createElement({"kind":"label","id":generated+"_y-label","extraAttributes":{"for":generated+"_y-value" }});
+        let col22=HTMLElementUtils.createColumn({"width":6});
+           let  label221=HTMLElementUtils.createElement({"kind":"label","id":generated+"_y-label","extraAttributes":{"for":generated+"_y-value" }});
             label221.innerText="Y coordinate";
-            select222=HTMLElementUtils.createElement({"kind":"select", "id":generated+"_y-value", "extraAttributes":{ "class":"form-select form-select-sm", "aria-label":".form-select-sm"} });
+            let select222=HTMLElementUtils.createElement({"kind":"select", "id":generated+"_y-value", "extraAttributes":{ "class":"form-select form-select-sm", "aria-label":".form-select-sm"} });
 
-    row3=HTMLElementUtils.createRow({"id":generated+"_row-3"});
-        col30=HTMLElementUtils.createColumn({"width":4});
-            label301=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_coord-factor"}});
+    let row3=HTMLElementUtils.createRow({"id":generated+"_row-3"});
+        let col30=HTMLElementUtils.createColumn({"width":4});
+            let label301=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_coord-factor"}});
             label301.innerHTML="Coordinate scale factor";
-            inputscalefactor=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_coord-factor","extraAttributes":{ "class":"form-text-input", "type":"number", "value":1, "min":0, "step":0.05}});            
+            let inputscalefactor=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_coord-factor","extraAttributes":{ "class":"form-text-input", "type":"number", "value":1, "min":0, "step":0.05}});            
 
     /*row0.appendChild(col01)
         col01.appendChild(div011)
@@ -1076,66 +1076,66 @@ interfaceUtils._mGenUIFuncs.generateAccordionItem1=function(){
  * @returns {array} array of rows
  */
 interfaceUtils._mGenUIFuncs.generateColorByAccordion2= function(){
-    generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
+    let generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
 
     ///col 1
 
     //------------------------------------
-    rowcb=HTMLElementUtils.createRow({"id":generated+"_colorby"});
+    let rowcb=HTMLElementUtils.createRow({"id":generated+"_colorby"});
 
-    colcb1=HTMLElementUtils.createColumn({"width":12});
+    let colcb1=HTMLElementUtils.createColumn({"width":12});
 
-    labelcb11=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_cb-label"});
+    let labelcb11=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_cb-label"});
     labelcb11.innerHTML="<strong>Color options</strong>";
 
 
     //col 2
     //-----------------------------------
 
-    colcb2=HTMLElementUtils.createColumn({"width":4});
-        divformcheck1cb=HTMLElementUtils.createElement({"kind":"div","extraAttributes":{"class":"form-check"}});
-            inputradio1cb=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_cb-bygroup","extraAttributes":{ "name":generated+"_flexRadioColorBy", "class":"form-check-input", "type":"radio", "checked":true}});
-            labelcbgroup=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_cb-bygroup"}});
+    let colcb2=HTMLElementUtils.createColumn({"width":4});
+        let divformcheck1cb=HTMLElementUtils.createElement({"kind":"div","extraAttributes":{"class":"form-check"}});
+            let inputradio1cb=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_cb-bygroup","extraAttributes":{ "name":generated+"_flexRadioColorBy", "class":"form-check-input", "type":"radio", "checked":true}});
+            let labelcbgroup=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_cb-bygroup"}});
             labelcbgroup.innerText="Color by group";
         
-        divformcheck2cb=HTMLElementUtils.createElement({"kind":"div", "extraAttributes":{"class":"form-check"}});
-            inputradio2cb=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_cb-bypoint","extraAttributes":{"name":generated+"_flexRadioColorBy","class":"form-check-input","type":"radio"}});
-            labelcbpoint=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_cb-bypoint"}});
+        let divformcheck2cb=HTMLElementUtils.createElement({"kind":"div", "extraAttributes":{"class":"form-check"}});
+            let inputradio2cb=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_cb-bypoint","extraAttributes":{"name":generated+"_flexRadioColorBy","class":"form-check-input","type":"radio"}});
+            let labelcbpoint=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_cb-bypoint"}});
             labelcbpoint.innerText="Color by marker";
    
     //------------------------
 
-    colcb3=HTMLElementUtils.createColumn({"width":8});
+    let colcb3=HTMLElementUtils.createColumn({"width":8});
         //create a whole group for color by group, random, key and group name
-        divoptionscolgroup=HTMLElementUtils.createElement({"kind":"div","id":generated+"_cb-col-group-options","extraAttributes":{"class": "renderOptionContainer"}});
+        let divoptionscolgroup=HTMLElementUtils.createElement({"kind":"div","id":generated+"_cb-col-group-options","extraAttributes":{"class": "renderOptionContainer"}});
 
-            rowkey=HTMLElementUtils.createElement({"kind":"div","id":generated+"_row-cb-gr-key","extraAttributes":{"class": "form-check"}});
-                inputradiocbgrkey=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_cb-bygroup-key","extraAttributes":{ "name":generated+"_flexRadioColorByGroup", "class":"form-check-input", "type":"radio", "checked":true}});
-                labelcbgroupkey=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_cb-bygroup-key"}});
+            let rowkey=HTMLElementUtils.createElement({"kind":"div","id":generated+"_row-cb-gr-key","extraAttributes":{"class": "form-check"}});
+                let inputradiocbgrkey=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_cb-bygroup-key","extraAttributes":{ "name":generated+"_flexRadioColorByGroup", "class":"form-check-input", "type":"radio", "checked":true}});
+                let labelcbgroupkey=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_cb-bygroup-key"}});
                 labelcbgroupkey.innerHTML="Generate color from key value<br>";
 
-            rowrand=HTMLElementUtils.createElement({"kind":"div","id":generated+"_row-cb-gr-rand","extraAttributes":{"class": "form-check"}});
-                inputradiocbgrrand=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_cb-bygroup-rand","extraAttributes":{ "name":generated+"_flexRadioColorByGroup", "class":"form-check-input", "type":"radio"}});
-                labelcbgrouprand=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_cb-bygroup-rand"}});
+            let rowrand=HTMLElementUtils.createElement({"kind":"div","id":generated+"_row-cb-gr-rand","extraAttributes":{"class": "form-check"}});
+                let inputradiocbgrrand=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_cb-bygroup-rand","extraAttributes":{ "name":generated+"_flexRadioColorByGroup", "class":"form-check-input", "type":"radio"}});
+                let labelcbgrouprand=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_cb-bygroup-rand"}});
                 labelcbgrouprand.innerHTML="Generate color randomly<br>";
 
-            rowdict=HTMLElementUtils.createElement({"kind":"div","id":generated+"_row-cb-gr-dict","extraAttributes":{"class": "form-check"}});
-                inputradiocbgrdict=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_cb-bygroup-dict","extraAttributes":{ "name":generated+"_flexRadioColorByGroup", "class":"form-check-input", "type":"radio"}});
-                labelcbgroupdict=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_cb-bygroup-dict"}});
+            let rowdict=HTMLElementUtils.createElement({"kind":"div","id":generated+"_row-cb-gr-dict","extraAttributes":{"class": "form-check"}});
+                let inputradiocbgrdict=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_cb-bygroup-dict","extraAttributes":{ "name":generated+"_flexRadioColorByGroup", "class":"form-check-input", "type":"radio"}});
+                let labelcbgroupdict=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_cb-bygroup-dict"}});
                 labelcbgroupdict.innerHTML="Use color from dictionary<br>";
-                inputtextcbgrdict=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_cb-bygroup-dict-val","extraAttributes":{ "class":"form-text-input", "type":"text", "placeholder":"{\"key1\":\"#FFFFFF\",...}"}});
+                let inputtextcbgrdict=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_cb-bygroup-dict-val","extraAttributes":{ "class":"form-text-input", "type":"text", "placeholder":"{\"key1\":\"#FFFFFF\",...}"}});
                 inputtextcbgrdict.disabled=true
 
-        divoptionscol=HTMLElementUtils.createElement({"kind":"div","id":generated+"_cb-col-options","extraAttributes":{"class": "renderOptionContainer d-none"}});
-            selectcbcol=HTMLElementUtils.createElement({"kind":"select","id":generated+"_cb-col-value","extraAttributes":{"class":"form-select form-select-sm","aria-label":".form-select-sm"}});
-            labelcbcol=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_cb_col-colname-label","extraAttributes":{"for":generated+"_cb-col-value"} });
+        let divoptionscol=HTMLElementUtils.createElement({"kind":"div","id":generated+"_cb-col-options","extraAttributes":{"class": "renderOptionContainer d-none"}});
+            let selectcbcol=HTMLElementUtils.createElement({"kind":"select","id":generated+"_cb-col-value","extraAttributes":{"class":"form-select form-select-sm","aria-label":".form-select-sm"}});
+            let labelcbcol=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_cb_col-colname-label","extraAttributes":{"for":generated+"_cb-col-value"} });
             labelcbcol.innerText="Select color column";
-        divoptionscmap=HTMLElementUtils.createElement({"kind":"div", "id":generated+"_cb-cmap-options","extraAttributes":{"class": "renderOptionContainer d-none"}});
-            labelcbcmapvalue=HTMLElementUtils.createElement({"kind":"label","id":generated+"_cb-cmap-label","extraAttributes":{"for":generated+"_cb-cmap-value"}});
+        let divoptionscmap=HTMLElementUtils.createElement({"kind":"div", "id":generated+"_cb-cmap-options","extraAttributes":{"class": "renderOptionContainer d-none"}});
+            let labelcbcmapvalue=HTMLElementUtils.createElement({"kind":"label","id":generated+"_cb-cmap-label","extraAttributes":{"for":generated+"_cb-cmap-value"}});
             labelcbcmapvalue.innerText="Color map (only if color column is numeral)";
-            cmapoptions=[{"text":"None","value":""}];
+            let cmapoptions=[{"text":"None","value":""}];
             dataUtils._d3LUTs.forEach((lut)=>{ cmapoptions.push({"text":lut.replace("interpolate",""),"value":lut}) })
-            selectcbcmap=HTMLElementUtils.selectTypeDropDown({ "id":generated+"_cb-cmap-value","class":"form-select form-select-sm","options":cmapoptions,"extraAttributes":{"aria-label":".form-select-sm"}})
+            let selectcbcmap=HTMLElementUtils.selectTypeDropDown({ "id":generated+"_cb-cmap-value","class":"form-select form-select-sm","options":cmapoptions,"extraAttributes":{"aria-label":".form-select-sm"}})
 
     //listeners
 
@@ -1192,23 +1192,23 @@ interfaceUtils._mGenUIFuncs.generateColorByAccordion2= function(){
  * @returns {array} a single rows
  */
   interfaceUtils._mGenUIFuncs.generateKeyColAccordion2= function(){
-    generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
+    let generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
 
     //row 0
-    row0=HTMLElementUtils.createRow({id:generated+"_key_0"});
-        collab=HTMLElementUtils.createColumn({"width":12});
-            labellab=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_cb-label"});
+    let row0=HTMLElementUtils.createRow({id:generated+"_key_0"});
+        let collab=HTMLElementUtils.createColumn({"width":12});
+            let labellab=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_cb-label"});
             labellab.innerHTML="<strong>Group by</strong>";
 
-        col00=HTMLElementUtils.createColumn({"width":6});
-            label010=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_key-col-label", "extraAttributes":{ "for":generated+"_key-col" }});
+        let col00=HTMLElementUtils.createColumn({"width":6});
+            let label010=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_key-col-label", "extraAttributes":{ "for":generated+"_key-col" }});
             label010.innerText="Key to group by (optional)"
-            select011=HTMLElementUtils.createElement({"kind":"select", "id":generated+"_gb-col-value", "extraAttributes":{ "class":"form-select form-select-sm", "aria-label":".form-select-sm"}});
+            let select011=HTMLElementUtils.createElement({"kind":"select", "id":generated+"_gb-col-value", "extraAttributes":{ "class":"form-select form-select-sm", "aria-label":".form-select-sm"}});
             select011.disabled=false
             
-            label012=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_name-col-label", "extraAttributes":{ "for":generated+"_name-col" }});
+            let label012=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_name-col-label", "extraAttributes":{ "for":generated+"_name-col" }});
             label012.innerText="Extra column to display (optional)"
-            select013=HTMLElementUtils.createElement({"kind":"select", "id":generated+"_gb-col-name", "extraAttributes":{ "class":"form-select form-select-sm", "aria-label":".form-select-sm"}});
+            let select013=HTMLElementUtils.createElement({"kind":"select", "id":generated+"_gb-col-name", "extraAttributes":{ "class":"form-select form-select-sm", "aria-label":".form-select-sm"}});
             select013.disabled=false
 
     row0.appendChild(collab)
@@ -1230,10 +1230,10 @@ interfaceUtils._mGenUIFuncs.generateColorByAccordion2= function(){
  */
 interfaceUtils._mGenUIFuncs.generateAccordionItem2=function(){
 
-    generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
+    let generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
     
-    row1=interfaceUtils._mGenUIFuncs.generateKeyColAccordion2();
-    row2=interfaceUtils._mGenUIFuncs.generateColorByAccordion2();
+    let row1=interfaceUtils._mGenUIFuncs.generateKeyColAccordion2();
+    let row2=interfaceUtils._mGenUIFuncs.generateColorByAccordion2();
 
     return [row1, row2];
 }
@@ -1244,17 +1244,17 @@ interfaceUtils._mGenUIFuncs.generateAccordionItem2=function(){
  */
  interfaceUtils._mGenUIFuncs.generateAccordionItem3=function(){
 
-    generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
+    let generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
 
-    row1=interfaceUtils._mGenUIFuncs.generateAdvancedScaleAccordion3();
-    row2=interfaceUtils._mGenUIFuncs.generateAdvancedPiechartAccordion3();
-    row3=interfaceUtils._mGenUIFuncs.generateAdvancedEdgesAccordion3();
-    row4=interfaceUtils._mGenUIFuncs.generateAdvancedShapeAccordion3();
-    row5=interfaceUtils._mGenUIFuncs.generateAdvancedOpacityAccordion3();
-    row6=interfaceUtils._mGenUIFuncs.generateAdvancedSortbyAccordion3();
-    row7=interfaceUtils._mGenUIFuncs.generateAdvancedTooltipAccordion3();
-    row8=interfaceUtils._mGenUIFuncs.generateAdvancedCollectionAccordion3();
-    row9=interfaceUtils._mGenUIFuncs.generateAdvancedMakeButtonAccordion3();
+    let row1=interfaceUtils._mGenUIFuncs.generateAdvancedScaleAccordion3();
+    let row2=interfaceUtils._mGenUIFuncs.generateAdvancedPiechartAccordion3();
+    let row3=interfaceUtils._mGenUIFuncs.generateAdvancedEdgesAccordion3();
+    let row4=interfaceUtils._mGenUIFuncs.generateAdvancedShapeAccordion3();
+    let row5=interfaceUtils._mGenUIFuncs.generateAdvancedOpacityAccordion3();
+    let row6=interfaceUtils._mGenUIFuncs.generateAdvancedSortbyAccordion3();
+    let row7=interfaceUtils._mGenUIFuncs.generateAdvancedTooltipAccordion3();
+    let row8=interfaceUtils._mGenUIFuncs.generateAdvancedCollectionAccordion3();
+    let row9=interfaceUtils._mGenUIFuncs.generateAdvancedMakeButtonAccordion3();
     
     return [row1,row2,row3,row4,row5,row6,row7,row8,row9];
  }
@@ -1264,28 +1264,28 @@ interfaceUtils._mGenUIFuncs.generateAccordionItem2=function(){
  * @returns {array} a single rows
  */
     interfaceUtils._mGenUIFuncs.generateAdvancedScaleAccordion3= function(){
-    generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
+    let generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
 
     //row 0
-    row0=HTMLElementUtils.createRow({id:generated+"_scale_0"});
-        collab=HTMLElementUtils.createColumn({"width":12});
-            labellab=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_cb-label"});
+    let row0=HTMLElementUtils.createRow({id:generated+"_scale_0"});
+        let collab=HTMLElementUtils.createColumn({"width":12});
+            let labellab=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_cb-label"});
             labellab.innerHTML="<strong>Marker size</strong>";
 
-        col00=HTMLElementUtils.createColumn({"width":6});
-            label0002=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_scale-factor"}});
+        let col00=HTMLElementUtils.createColumn({"width":6});
+            let label0002=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_scale-factor"}});
             label0002.innerHTML="Size factor:&nbsp;";
-            inputsizefactor=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_scale-factor","extraAttributes":{ "class":"form-text-input", "type":"number", "value":1, "min":0, "step":0.05}});
-            divformcheck000=HTMLElementUtils.createElement({ "kind":"div", "extraAttributes":{"class":"form-check"}});
-                inputcheck0000=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_use-scales","extraAttributes":{"class":"form-check-input","type":"checkbox" }});
-                label0001=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_use-scales-label", "extraAttributes":{ "for":generated+"_use-scales" }});
+            let inputsizefactor=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_scale-factor","extraAttributes":{ "class":"form-text-input", "type":"number", "value":1, "min":0, "step":0.05}});
+            let divformcheck000=HTMLElementUtils.createElement({ "kind":"div", "extraAttributes":{"class":"form-check"}});
+                let inputcheck0000=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_use-scales","extraAttributes":{"class":"form-check-input","type":"checkbox" }});
+                let label0001=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_use-scales-label", "extraAttributes":{ "for":generated+"_use-scales" }});
                 label0001.innerText="Use different size per marker"
             
                 
-        col01=HTMLElementUtils.createColumn({"width":6});
-            label010=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_scale-col-label", "extraAttributes":{ "for":generated+"_scale-col", "class":"d-none" }});
+        let col01=HTMLElementUtils.createColumn({"width":6});
+            let label010=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_scale-col-label", "extraAttributes":{ "for":generated+"_scale-col", "class":"d-none" }});
             label010.innerText="Size column"
-            select011=HTMLElementUtils.createElement({"kind":"select", "id":generated+"_scale-col", "extraAttributes":{ "class":"form-select form-select-sm d-none", "aria-label":".form-select-sm"}});
+            let select011=HTMLElementUtils.createElement({"kind":"select", "id":generated+"_scale-col", "extraAttributes":{ "class":"form-select form-select-sm d-none", "aria-label":".form-select-sm"}});
             select011.disabled=true
 
     inputcheck0000.addEventListener("change", (event)=>{
@@ -1325,63 +1325,63 @@ interfaceUtils._mGenUIFuncs.generateAccordionItem2=function(){
  * @returns {array} a single rows
  */
   interfaceUtils._mGenUIFuncs.generateAdvancedShapeAccordion3= function(){
-    generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
+    let generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
 
     //row 0
-    row0=HTMLElementUtils.createRow({id:generated+"_shape_0"});
-        collab=HTMLElementUtils.createColumn({"width":12});
-            labellab=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_shape-label"});
+    let row0=HTMLElementUtils.createRow({id:generated+"_shape_0"});
+        let collab=HTMLElementUtils.createColumn({"width":12});
+            let labellab=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_shape-label"});
             labellab.innerHTML="<strong>Marker shape</strong>";
 
-        colshape2=HTMLElementUtils.createColumn({"width":6});
-            divformcheck1shape=HTMLElementUtils.createElement({"kind":"div","extraAttributes":{"class":"form-check"}});
-                inputradio1shape=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_shape-bygroup","extraAttributes":{ "name":generated+"_flexRadioShapeBy", "class":"form-check-input", "type":"radio", "checked":true}});
-                labelshapegroup=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_shape-bygroup"}});
+        let colshape2=HTMLElementUtils.createColumn({"width":6});
+            let divformcheck1shape=HTMLElementUtils.createElement({"kind":"div","extraAttributes":{"class":"form-check"}});
+                let inputradio1shape=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_shape-bygroup","extraAttributes":{ "name":generated+"_flexRadioShapeBy", "class":"form-check-input", "type":"radio", "checked":true}});
+                let labelshapegroup=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_shape-bygroup"}});
                 labelshapegroup.innerText="Shape by group";
             
-            divformcheck2shape=HTMLElementUtils.createElement({"kind":"div", "extraAttributes":{"class":"form-check"}});
-                inputradio2shape=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_shape-bypoint","extraAttributes":{"name":generated+"_flexRadioShapeBy","class":"form-check-input","type":"radio"}});
-                labelshapepoint=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_shape-bypoint"}});
+            let divformcheck2shape=HTMLElementUtils.createElement({"kind":"div", "extraAttributes":{"class":"form-check"}});
+                let inputradio2shape=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_shape-bypoint","extraAttributes":{"name":generated+"_flexRadioShapeBy","class":"form-check-input","type":"radio"}});
+                let labelshapepoint=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_shape-bypoint"}});
                 labelshapepoint.innerText="Shape by marker";
             
-            divformcheck3shape=HTMLElementUtils.createElement({"kind":"div", "extraAttributes":{"class":"form-check"}});
-                inputradio3shape=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_shape-fixed","extraAttributes":{"name":generated+"_flexRadioShapeBy","class":"form-check-input","type":"radio"}});
-                labelshapefixed=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_shape-fixed"}});
+            let divformcheck3shape=HTMLElementUtils.createElement({"kind":"div", "extraAttributes":{"class":"form-check"}});
+                let inputradio3shape=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_shape-fixed","extraAttributes":{"name":generated+"_flexRadioShapeBy","class":"form-check-input","type":"radio"}});
+                let labelshapefixed=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_shape-fixed"}});
                 labelshapefixed.innerText="Use a fixed shape";
         
-            divformcheck4shape=HTMLElementUtils.createElement({ "kind":"div", "extraAttributes":{"class":"form-check"}});
-                inputcheck4shape=HTMLElementUtils.createElement({"kind":"input", "id":generated+"__no-outline","extraAttributes":{"class":"form-check-input","type":"checkbox" }});
-                label4shape=HTMLElementUtils.createElement({"kind":"label", "id":generated+"__no-outline-label", "extraAttributes":{ "for":generated+"__no-outline" }});
+            let divformcheck4shape=HTMLElementUtils.createElement({ "kind":"div", "extraAttributes":{"class":"form-check"}});
+                let inputcheck4shape=HTMLElementUtils.createElement({"kind":"input", "id":generated+"__no-outline","extraAttributes":{"class":"form-check-input","type":"checkbox" }});
+                let label4shape=HTMLElementUtils.createElement({"kind":"label", "id":generated+"__no-outline-label", "extraAttributes":{ "for":generated+"__no-outline" }});
                 label4shape.innerText="Remove Outline"
         //------------------------
     
-        colshape3=HTMLElementUtils.createColumn({"width":6});
+        let colshape3=HTMLElementUtils.createColumn({"width":6});
             //create a whole group for shape by group, random, key and group name
-            divoptionscolgroup=HTMLElementUtils.createElement({"kind":"div","id":generated+"_shape-col-group-options","extraAttributes":{"class": "renderOptionContainer"}});
+            let divoptionscolgroup=HTMLElementUtils.createElement({"kind":"div","id":generated+"_shape-col-group-options","extraAttributes":{"class": "renderOptionContainer"}});
     
-                rowrand=HTMLElementUtils.createElement({"kind":"div","id":generated+"_row-shape-gr-rand","extraAttributes":{"class": "form-check"}});
-                    inputradioshapegrrand=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_shape-bygroup-rand","extraAttributes":{ "name":generated+"_flexRadioShapeByGroup", "class":"form-check-input", "type":"radio", "checked":true}});
-                    labelshapegrouprand=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_shape-bygroup-rand"}});
+                let rowrand=HTMLElementUtils.createElement({"kind":"div","id":generated+"_row-shape-gr-rand","extraAttributes":{"class": "form-check"}});
+                    let inputradioshapegrrand=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_shape-bygroup-rand","extraAttributes":{ "name":generated+"_flexRadioShapeByGroup", "class":"form-check-input", "type":"radio", "checked":true}});
+                    let labelshapegrouprand=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_shape-bygroup-rand"}});
                     labelshapegrouprand.innerHTML="Select shape iteratively<br>";
     
-                rowdict=HTMLElementUtils.createElement({"kind":"div","id":generated+"_row-shape-gr-dict","extraAttributes":{"class": "form-check"}});
-                    inputradioshapegrdict=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_shape-bygroup-dict","extraAttributes":{ "name":generated+"_flexRadioShapeByGroup", "class":"form-check-input", "type":"radio"}});
-                    labelshapegroupdict=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_shape-bygroup-dict"}});
+                let rowdict=HTMLElementUtils.createElement({"kind":"div","id":generated+"_row-shape-gr-dict","extraAttributes":{"class": "form-check"}});
+                    let inputradioshapegrdict=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_shape-bygroup-dict","extraAttributes":{ "name":generated+"_flexRadioShapeByGroup", "class":"form-check-input", "type":"radio"}});
+                    let labelshapegroupdict=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_shape-bygroup-dict"}});
                     labelshapegroupdict.innerHTML="Use shape from dictionary<br>";
-                    inputtextshapegrdict=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_shape-bygroup-dict-val","extraAttributes":{ "class":"form-text-input", "type":"text", "placeholder":"{\"key1\":\"disc\",...}"}});
+                    let inputtextshapegrdict=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_shape-bygroup-dict-val","extraAttributes":{ "class":"form-text-input", "type":"text", "placeholder":"{\"key1\":\"disc\",...}"}});
                     inputtextshapegrdict.disabled=true
     
-            divoptionscol=HTMLElementUtils.createElement({"kind":"div","id":generated+"_shape-col-options","extraAttributes":{"class": "renderOptionContainer d-none"}});
-                selectshapecol=HTMLElementUtils.createElement({"kind":"select","id":generated+"_shape-col-value","extraAttributes":{"class":"form-select form-select-sm","aria-label":".form-select-sm"}});
-                labelshapecol=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_shape_col-colname-label","extraAttributes":{"for":generated+"_shape-col-value"} });
+            let divoptionscol=HTMLElementUtils.createElement({"kind":"div","id":generated+"_shape-col-options","extraAttributes":{"class": "renderOptionContainer d-none"}});
+                let selectshapecol=HTMLElementUtils.createElement({"kind":"select","id":generated+"_shape-col-value","extraAttributes":{"class":"form-select form-select-sm","aria-label":".form-select-sm"}});
+                let labelshapecol=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_shape_col-colname-label","extraAttributes":{"for":generated+"_shape-col-value"} });
                 labelshapecol.innerText="Select shape column";
             
-            divoptionsfixed=HTMLElementUtils.createElement({"kind":"div","id":generated+"_shape-fixed-options","extraAttributes":{"class": "renderOptionContainer d-none"}});
-                labelfixedshapevalue=HTMLElementUtils.createElement({"kind":"label","id":generated+"_shape-fixed-label","extraAttributes":{"for":generated+"_shape-fixed-value"}});
+            let divoptionsfixed=HTMLElementUtils.createElement({"kind":"div","id":generated+"_shape-fixed-options","extraAttributes":{"class": "renderOptionContainer d-none"}});
+                let labelfixedshapevalue=HTMLElementUtils.createElement({"kind":"label","id":generated+"_shape-fixed-label","extraAttributes":{"for":generated+"_shape-fixed-value"}});
                 labelfixedshapevalue.innerText="Select shape";
-                shapeoptions=[];
+                let shapeoptions=[];
                 markerUtils._symbolStrings.forEach((sho, shoIndex)=>{ shapeoptions.push({"text":markerUtils._symbolUnicodes[shoIndex],"value":sho}) })
-                shapeinput2=HTMLElementUtils.selectTypeDropDown({ "id":generated+"_shape-fixed-value","class":"form-select form-select-sm","options":shapeoptions,"extraAttributes":{"aria-label":".form-select-sm"}})
+                let shapeinput2=HTMLElementUtils.selectTypeDropDown({ "id":generated+"_shape-fixed-value","class":"form-select form-select-sm","options":shapeoptions,"extraAttributes":{"aria-label":".form-select-sm"}})
                 shapeinput2.value=markerUtils._symbolStrings[0]
 
 
@@ -1443,38 +1443,38 @@ interfaceUtils._mGenUIFuncs.generateAccordionItem2=function(){
  * @returns {array} a single rows
  */
   interfaceUtils._mGenUIFuncs.generateAdvancedCollectionAccordion3= function(){
-    generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
+    let generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
 
     //row 0
-    row0=HTMLElementUtils.createRow({id:generated+"_collectionItem_0"});
-        collab=HTMLElementUtils.createColumn({"width":12});
-            labellab=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_collectionItem-label"});
+    let row0=HTMLElementUtils.createRow({id:generated+"_collectionItem_0"});
+        let collab=HTMLElementUtils.createColumn({"width":12});
+            let labellab=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_collectionItem-label"});
             labellab.innerHTML="<strong>Collection mode</strong>";
 
-        colcollectionItem2=HTMLElementUtils.createColumn({"width":6});
+        let colcollectionItem2=HTMLElementUtils.createColumn({"width":6});
             
-            divformcheck2collectionItem=HTMLElementUtils.createElement({"kind":"div", "extraAttributes":{"class":"form-check"}});
-                inputradio2collectionItem=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_collectionItem-fixed","extraAttributes":{"name":generated+"_flexRadioCollectionBy","class":"form-check-input","type":"radio", "checked":true}});
-                labelcollectionItemfixed=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_collectionItem-fixed"}});
+            let divformcheck2collectionItem=HTMLElementUtils.createElement({"kind":"div", "extraAttributes":{"class":"form-check"}});
+                let inputradio2collectionItem=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_collectionItem-fixed","extraAttributes":{"name":generated+"_flexRadioCollectionBy","class":"form-check-input","type":"radio", "checked":true}});
+                let labelcollectionItemfixed=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_collectionItem-fixed"}});
                 labelcollectionItemfixed.innerText="Use a fixed collection item";
 
-            divformcheck3collectionItem=HTMLElementUtils.createElement({"kind":"div", "extraAttributes":{"class":"form-check"}});
-                inputradio3collectionItem=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_collectionItem-bypoint","extraAttributes":{"name":generated+"_flexRadioCollectionBy","class":"form-check-input","type":"radio"}});
-                labelcollectionItempoint=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_collectionItem-bypoint"}});
+            let divformcheck3collectionItem=HTMLElementUtils.createElement({"kind":"div", "extraAttributes":{"class":"form-check"}});
+                let inputradio3collectionItem=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_collectionItem-bypoint","extraAttributes":{"name":generated+"_flexRadioCollectionBy","class":"form-check-input","type":"radio"}});
+                let labelcollectionItempoint=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_collectionItem-bypoint"}});
                 labelcollectionItempoint.innerText="Collection item by marker";
         //------------------------
     
-        colcollectionItem3=HTMLElementUtils.createColumn({"width":6});
+        let colcollectionItem3=HTMLElementUtils.createColumn({"width":6});
             //create a whole group for collectionItem by group, random, key and group name
             
-            divoptionsfixed=HTMLElementUtils.createElement({"kind":"div","id":generated+"_collectionItem-fixed-options","extraAttributes":{"class": "renderOptionContainer"}});
-                labelfixedcollectionItemvalue=HTMLElementUtils.createElement({"kind":"label","id":generated+"_collectionItem-fixed-label","extraAttributes":{"for":generated+"_collectionItem-fixed-value"}});
+            let divoptionsfixed=HTMLElementUtils.createElement({"kind":"div","id":generated+"_collectionItem-fixed-options","extraAttributes":{"class": "renderOptionContainer"}});
+                let labelfixedcollectionItemvalue=HTMLElementUtils.createElement({"kind":"label","id":generated+"_collectionItem-fixed-label","extraAttributes":{"for":generated+"_collectionItem-fixed-value"}});
                 labelfixedcollectionItemvalue.innerText="Specify collection item index";
-                collectionIteminput2=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_collectionItem-fixed-value","extraAttributes":{ "class":"form-text-input", "type":"number", "value":0, "step":1, "min":0, "max":1000}});
+                let collectionIteminput2=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_collectionItem-fixed-value","extraAttributes":{ "class":"form-text-input", "type":"number", "value":0, "step":1, "min":0, "max":1000}});
 
-            divoptionscol=HTMLElementUtils.createElement({"kind":"div","id":generated+"_collectionItem-col-options","extraAttributes":{"class": "renderOptionContainer d-none"}});
-                selectcollectionItemcol=HTMLElementUtils.createElement({"kind":"select","id":generated+"_collectionItem-col-value","extraAttributes":{"class":"form-select form-select-sm","aria-label":".form-select-sm"}});
-                labelcollectionItemcol=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_collectionItem_col-colname-label","extraAttributes":{"for":generated+"_collectionItem-col-value"} });
+            let divoptionscol=HTMLElementUtils.createElement({"kind":"div","id":generated+"_collectionItem-col-options","extraAttributes":{"class": "renderOptionContainer d-none"}});
+                let selectcollectionItemcol=HTMLElementUtils.createElement({"kind":"select","id":generated+"_collectionItem-col-value","extraAttributes":{"class":"form-select form-select-sm","aria-label":".form-select-sm"}});
+                let labelcollectionItemcol=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_collectionItem_col-colname-label","extraAttributes":{"for":generated+"_collectionItem-col-value"} });
                 labelcollectionItemcol.innerText="Select collection item index column";
             
 
@@ -1513,28 +1513,28 @@ interfaceUtils._mGenUIFuncs.generateAccordionItem2=function(){
  * @returns {array} a single rows
  */
   interfaceUtils._mGenUIFuncs.generateAdvancedPiechartAccordion3= function(){
-    generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
+    let generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
 
     //row 0
-    row0=HTMLElementUtils.createRow({id:generated+"_piechart_0"});
-        collab=HTMLElementUtils.createColumn({"width":12});
-            labellab=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_cb-label"});
+    let row0=HTMLElementUtils.createRow({id:generated+"_piechart_0"});
+        let collab=HTMLElementUtils.createColumn({"width":12});
+            let labellab=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_cb-label"});
             labellab.innerHTML="<strong>Pie-charts</strong>";
 
-        col00=HTMLElementUtils.createColumn({"width":6});
-            divformcheck000=HTMLElementUtils.createElement({ "kind":"div", "extraAttributes":{"class":"form-check"}});
-                inputcheck0000=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_use-piecharts","extraAttributes":{"class":"form-check-input","type":"checkbox" }});
-                label0001=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_use-piecharts-label", "extraAttributes":{ "for":generated+"_use-piecharts" }});
+        let col00=HTMLElementUtils.createColumn({"width":6});
+            let divformcheck000=HTMLElementUtils.createElement({ "kind":"div", "extraAttributes":{"class":"form-check"}});
+                let inputcheck0000=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_use-piecharts","extraAttributes":{"class":"form-check-input","type":"checkbox" }});
+                let label0001=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_use-piecharts-label", "extraAttributes":{ "for":generated+"_use-piecharts" }});
                 label0001.innerText="Use pie-charts"
                 
-        col01=HTMLElementUtils.createColumn({"width":6});
-            label010=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_piechart-col-label", "extraAttributes":{ "class":"d-none", "for":generated+"_piechart-col" }});
+        let col01=HTMLElementUtils.createColumn({"width":6});
+            let label010=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_piechart-col-label", "extraAttributes":{ "class":"d-none", "for":generated+"_piechart-col" }});
             label010.innerText="Pie-chart column"
-            select011=HTMLElementUtils.createElement({"kind":"select", "id":generated+"_piechart-col", "extraAttributes":{ "class":"d-none form-select form-select-sm", "aria-label":".form-select-sm"}});
+            let select011=HTMLElementUtils.createElement({"kind":"select", "id":generated+"_piechart-col", "extraAttributes":{ "class":"d-none form-select form-select-sm", "aria-label":".form-select-sm"}});
             select011.disabled=true
-            label012=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_piechart-dict-label", "extraAttributes":{ "class":"d-none", "for":generated+"_piechart-dict" }});
+            let label012=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_piechart-dict-label", "extraAttributes":{ "class":"d-none", "for":generated+"_piechart-dict" }});
             label012.innerText="Pie-chart colors"
-            input013=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_piechart-dict-val","extraAttributes":{ "class":"d-none form-text-input", "type":"text", "placeholder":"{\"key1\":\"#FFFFFF\",...}"}});            
+            let input013=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_piechart-dict-val","extraAttributes":{ "class":"d-none form-text-input", "type":"text", "placeholder":"{\"key1\":\"#FFFFFF\",...}"}});            
 
     inputcheck0000.addEventListener("change", (event)=>{
         var value=event.target.checked;
@@ -1572,28 +1572,28 @@ interfaceUtils._mGenUIFuncs.generateAccordionItem2=function(){
  * @returns {array} a single rows
  */
   interfaceUtils._mGenUIFuncs.generateAdvancedEdgesAccordion3= function(){
-    generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
+    let generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
 
     //row 0
-    row0=HTMLElementUtils.createRow({id:generated+"_edges_0"});
-        collab=HTMLElementUtils.createColumn({"width":12});
-            labellab=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_cb-label"});
+    let row0=HTMLElementUtils.createRow({id:generated+"_edges_0"});
+        let collab=HTMLElementUtils.createColumn({"width":12});
+            let labellab=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_cb-label"});
             labellab.innerHTML="<strong>Network diagram</strong>";
 
-        col00=HTMLElementUtils.createColumn({"width":6});
-            divformcheck000=HTMLElementUtils.createElement({ "kind":"div", "extraAttributes":{"class":"form-check"}});
-                inputcheck0000=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_use-edges","extraAttributes":{"class":"form-check-input","type":"checkbox" }});
-                label0001=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_use-edges-label", "extraAttributes":{ "for":generated+"_use-edges" }});
+        let col00=HTMLElementUtils.createColumn({"width":6});
+            let divformcheck000=HTMLElementUtils.createElement({ "kind":"div", "extraAttributes":{"class":"form-check"}});
+                let inputcheck0000=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_use-edges","extraAttributes":{"class":"form-check-input","type":"checkbox" }});
+                let label0001=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_use-edges-label", "extraAttributes":{ "for":generated+"_use-edges" }});
                 label0001.innerText="Add Edges"
                 
-        col01=HTMLElementUtils.createColumn({"width":6});
-            label010=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_edges-col-label", "extraAttributes":{ "class":"d-none", "for":generated+"_edges-col" }});
+        let col01=HTMLElementUtils.createColumn({"width":6});
+            let label010=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_edges-col-label", "extraAttributes":{ "class":"d-none", "for":generated+"_edges-col" }});
             label010.innerText="Edges column"
-            select011=HTMLElementUtils.createElement({"kind":"select", "id":generated+"_edges-col", "extraAttributes":{ "class":"d-none form-select form-select-sm", "aria-label":".form-select-sm"}});
+            let select011=HTMLElementUtils.createElement({"kind":"select", "id":generated+"_edges-col", "extraAttributes":{ "class":"d-none form-select form-select-sm", "aria-label":".form-select-sm"}});
 
-    inputcheck0000.addEventListener("change", (event)=>{
+     inputcheck0000.addEventListener("change", (event)=>{
         var value=event.target.checked;
-        //var doms=["_gb-single","_gb-col","_gb-feature-value","_cb-colormap","_cb-bypoint","_cb-bygroup","_gb-feature-value",
+        //var doms=[let "_gb-single","_gb-col","_gb-feature-value","_cb-colormap","_cb-bypoint","_cb-bygroup","_gb-feature-value",
         //          "_gb-col-value","_gb-col-name","_cb-cmap-value","_cb-col-value","_cb-bygroup-rand","_cb-bygroup-gene","_cb-bygroup-name" ]
         if(value){
             interfaceUtils._mGenUIFuncs.hideShow(event, ["_edges-col-label","_edges-col","_edges-dict-label","_edges-dict-val"],[0,1,2,3]);
@@ -1623,27 +1623,27 @@ interfaceUtils._mGenUIFuncs.generateAccordionItem2=function(){
  * @returns {array} a single rows
  */
   interfaceUtils._mGenUIFuncs.generateAdvancedOpacityAccordion3= function(){
-    generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
+    let generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
 
     //row 0
-    row0=HTMLElementUtils.createRow({id:generated+"_opacity_0"});
-        collab=HTMLElementUtils.createColumn({"width":12});
-            labellab=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_cb-label"});
+    let row0=HTMLElementUtils.createRow({id:generated+"_opacity_0"});
+        let collab=HTMLElementUtils.createColumn({"width":12});
+            let labellab=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_cb-label"});
             labellab.innerHTML="<strong>Marker opacity</strong>";
 
-        col00=HTMLElementUtils.createColumn({"width":6});
-            label0002=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_opacity"}});
+        let col00=HTMLElementUtils.createColumn({"width":6});
+            let label0002=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_opacity"}});
             label0002.innerHTML="Opacity value:&nbsp;";
-            inputsizefactor=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_opacity","extraAttributes":{ "class":"form-text-input", "type":"number", "value":1, "step":0.05, "min":0, "max":1}});
-            divformcheck000=HTMLElementUtils.createElement({ "kind":"div", "extraAttributes":{"class":"form-check"}});
-                inputcheck0000=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_use-opacity","extraAttributes":{"class":"form-check-input","type":"checkbox" }});
-                label0001=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_use-opacity-label", "extraAttributes":{ "for":generated+"_use-opacity" }});
+            let inputsizefactor=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_opacity","extraAttributes":{ "class":"form-text-input", "type":"number", "value":1, "step":0.05, "min":0, "max":1}});
+            let divformcheck000=HTMLElementUtils.createElement({ "kind":"div", "extraAttributes":{"class":"form-check"}});
+                let inputcheck0000=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_use-opacity","extraAttributes":{"class":"form-check-input","type":"checkbox" }});
+                let label0001=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_use-opacity-label", "extraAttributes":{ "for":generated+"_use-opacity" }});
                 label0001.innerText="Use different opacity per marker"
 
-        col01=HTMLElementUtils.createColumn({"width":6});
-            label010=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_opacity-col-label", "extraAttributes":{ "for":generated+"_opacity-col", "class":"d-none" }});
+        let col01=HTMLElementUtils.createColumn({"width":6});
+            let label010=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_opacity-col-label", "extraAttributes":{ "for":generated+"_opacity-col", "class":"d-none" }});
             label010.innerText="Opacity column"
-            select011=HTMLElementUtils.createElement({"kind":"select", "id":generated+"_opacity-col", "extraAttributes":{ "class":"form-select form-select-sm d-none", "aria-label":".form-select-sm"}});
+            let select011=HTMLElementUtils.createElement({"kind":"select", "id":generated+"_opacity-col", "extraAttributes":{ "class":"form-select form-select-sm d-none", "aria-label":".form-select-sm"}});
             select011.disabled=true
 
     inputcheck0000.addEventListener("change", (event)=>{
@@ -1680,33 +1680,33 @@ interfaceUtils._mGenUIFuncs.generateAccordionItem2=function(){
  * @returns {array} a single rows
  */
  interfaceUtils._mGenUIFuncs.generateAdvancedSortbyAccordion3= function(){
-    generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
+    let generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
 
     //row 0
-    row0=HTMLElementUtils.createRow({id:generated+"_sortby_0"});
-        collab=HTMLElementUtils.createColumn({"width":12});
-            labellab=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_cb-label"});
+    let row0=HTMLElementUtils.createRow({id:generated+"_sortby_0"});
+        let collab=HTMLElementUtils.createColumn({"width":12});
+            let labellab=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_cb-label"});
             labellab.innerHTML="<strong>Marker ordering</strong>";
 
-        col00=HTMLElementUtils.createColumn({"width":6});
-            divformcheck000=HTMLElementUtils.createElement({ "kind":"div", "extraAttributes":{"class":"form-check"}});
-                inputcheck0000=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_use-sortby","extraAttributes":{"class":"form-check-input","type":"checkbox" }});
-                label0001=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_use-sortby-label", "extraAttributes":{ "for":generated+"_use-sortby" }});
+        let col00=HTMLElementUtils.createColumn({"width":6});
+            let divformcheck000=HTMLElementUtils.createElement({ "kind":"div", "extraAttributes":{"class":"form-check"}});
+                let inputcheck0000=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_use-sortby","extraAttributes":{"class":"form-check-input","type":"checkbox" }});
+                let label0001=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_use-sortby-label", "extraAttributes":{ "for":generated+"_use-sortby" }});
                 label0001.innerText="Sort markers"
                 
-        col01=HTMLElementUtils.createColumn({"width":6});
-            label010=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_sortby-col-label", "extraAttributes":{ "class":"d-none", "for":generated+"_sortby-col" }});
+        let col01=HTMLElementUtils.createColumn({"width":6});
+            let label010=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_sortby-col-label", "extraAttributes":{ "class":"d-none", "for":generated+"_sortby-col" }});
             label010.innerText="Sort by column"
-            select011=HTMLElementUtils.createElement({"kind":"select", "id":generated+"_sortby-col", "extraAttributes":{ "class":"d-none form-select form-select-sm", "aria-label":".form-select-sm"}});
-            divformcheck012=HTMLElementUtils.createElement({ "kind":"div", "id":generated+"_sortby-desc-div", "extraAttributes":{"class":"d-none form-check"}});
-                inputcheck0120=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_sortby-desc","extraAttributes":{"class":"form-check-input","type":"checkbox" }});
-                label0121=HTMLElementUtils.createElement({"kind":"label", "id":generated+"sortby-desc-label", "extraAttributes":{ "for":generated+"_sortby-desc" }});
+            let select011=HTMLElementUtils.createElement({"kind":"select", "id":generated+"_sortby-col", "extraAttributes":{ "class":"d-none form-select form-select-sm", "aria-label":".form-select-sm"}});
+            let divformcheck012=HTMLElementUtils.createElement({ "kind":"div", "id":generated+"_sortby-desc-div", "extraAttributes":{"class":"d-none form-check"}});
+            let inputcheck0120=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_sortby-desc","extraAttributes":{"class":"form-check-input","type":"checkbox" }});
+                let label0121=HTMLElementUtils.createElement({"kind":"label", "id":generated+"sortby-desc-let label", "extraAttributes":{ "for":generated+"_sortby-desc" }});
                 label0121.innerText="Use descending order"
 
-        col10=HTMLElementUtils.createColumn({"width":6});
-            label101=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_z-order"}});
+        let col10=HTMLElementUtils.createColumn({"width":6});
+            let label101=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_z-order"}});
             label101.innerHTML="Z-order value:&nbsp;";
-            input102=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_z-order","extraAttributes":{ "class":"form-text-input", "type":"number", "value":1, "step":0.05, "min":0, "max":1}});
+            let input102=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_z-order","extraAttributes":{ "class":"form-text-input", "type":"number", "value":1, "step":0.05, "min":0, "max":1}});
         
     inputcheck0000.addEventListener("change", (event)=>{
         var value=event.target.checked;
@@ -1747,18 +1747,18 @@ interfaceUtils._mGenUIFuncs.generateAccordionItem2=function(){
  * @returns {array} a single rows
  */
   interfaceUtils._mGenUIFuncs.generateAdvancedTooltipAccordion3= function(){
-    generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
+    let generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
 
     //row 0
-    row0=HTMLElementUtils.createRow({id:generated+"_tooltip_0"});
-        collab=HTMLElementUtils.createColumn({"width":12});
-            labellab=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_cb-label"});
+    let row0=HTMLElementUtils.createRow({id:generated+"_tooltip_0"});
+        let collab=HTMLElementUtils.createColumn({"width":12});
+            let labellab=HTMLElementUtils.createElement({"kind":"label", "id":generated+"_cb-label"});
             labellab.innerHTML="<strong>Marker tooltip</strong>";
 
-        col00=HTMLElementUtils.createColumn({"width":6});
-            label0002=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_tooltip_fmt"}});
+        let col00=HTMLElementUtils.createColumn({"width":6});
+            let label0002=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"class":"form-check-label","for":generated+"_tooltip_fmt"}});
             label0002.innerHTML="Format:&nbsp;";
-            inputsizefactor=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_tooltip_fmt","extraAttributes":{ "class":"form-text-input", "type":"text", "value":""}});
+            let inputsizefactor=HTMLElementUtils.createElement({"kind":"input", "id":generated+"_tooltip_fmt","extraAttributes":{ "class":"form-text-input", "type":"text", "value":""}});
             
     row0.appendChild(collab)
         collab.appendChild(labellab)
@@ -1775,15 +1775,15 @@ interfaceUtils._mGenUIFuncs.generateAccordionItem2=function(){
  * @returns {array} a single rows
  */
   interfaceUtils._mGenUIFuncs.generateAdvancedMakeButtonAccordion3= function(){
-    generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
+    let generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
 
     var generateButton = function (event) {
         return projectUtils.makeButtonFromTab(event.target.id.split("_")[0]);
     } 
     //row 0
-    row0=HTMLElementUtils.createRow({id:generated+"_opacity_0"});
-        col00=HTMLElementUtils.createColumn({"width":6});
-            button000=HTMLElementUtils.createButton({
+    let row0=HTMLElementUtils.createRow({id:generated+"_opacity_0"});
+        let col00=HTMLElementUtils.createColumn({"width":6});
+            let button000=HTMLElementUtils.createButton({
                 "id":generated+"_Generate-button-from-tab",
                 "innerText":"Generate button from tab",
                 "class":"btn btn-light my-1",
@@ -1801,14 +1801,14 @@ interfaceUtils._mGenUIFuncs.generateAccordionItem2=function(){
  * @returns {HTMLElement} row
  */
 interfaceUtils._mGenUIFuncs.generateRowOptionsButtons=function(){
-    generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
-    row0=HTMLElementUtils.createRow({"id":generated+"_row-option-buttons"});
+    let generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
+    let row0=HTMLElementUtils.createRow({"id":generated+"_row-option-buttons"});
     row0.classList.add("updateViewRow")
-        col00=HTMLElementUtils.createColumn({"width":8});
+        let col00=HTMLElementUtils.createColumn({"width":8});
         //col01=HTMLElementUtils.createColumn({"width":3});
         //    button010=HTMLElementUtils.createButton({"id":generated+"_delete-button","innerText":"Close tab","class":"btn btn-secondary","eventListeners":{"click":(event)=>interfaceUtils._mGenUIFuncs.deleteTab(event)}});
-        col02=HTMLElementUtils.createColumn({"width":4});
-            button020=HTMLElementUtils.createButton({"id":generated+"_update-view-button","innerText":"Update view","class":" btn btn-primary my-1","eventListeners":{"click":(event)=> dataUtils.updateViewOptions(event.target.id.split("_")[0]) }});
+        let col02=HTMLElementUtils.createColumn({"width":4});
+            let button020=HTMLElementUtils.createButton({"id":generated+"_update-view-button","innerText":"Update view","class":" btn btn-primary my-1","eventListeners":{"click":(event)=> dataUtils.updateViewOptions(event.target.id.split("_")[0]) }});
     
     row0.appendChild(col00);
     //row0.appendChild(col01);
@@ -1822,9 +1822,9 @@ interfaceUtils._mGenUIFuncs.generateRowOptionsButtons=function(){
 
 interfaceUtils._mGenUIFuncs.rowForMarkerUI=function(){
 
-    generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
+    let generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
 
-    row0=HTMLElementUtils.createRow({id:generated+"_menu-UI"});
+    let row0=HTMLElementUtils.createRow({id:generated+"_menu-UI"});
     row0.classList.add("d-none");
 
     return row0;
@@ -1839,21 +1839,21 @@ interfaceUtils._mGenUIFuncs.fillDropDownsIfExpectedCSV=function(uid,expectedHead
     //expected headr is an object that has these keys, other will be ignored;
     //"X","Y","gb_sr","gb_col","gb_name","cb_cmap","cb_col"
     if(expectedHeader){
-        dropdowns=interfaceUtils._mGenUIFuncs.getTabDropDowns(uid);
+        let dropdowns=interfaceUtils._mGenUIFuncs.getTabDropDowns(uid);
 
-        for(d in expectedHeader){
+        for(let d in expectedHeader){
             if(dropdowns[d]){
-                needle=expectedHeader[d];
+                let needle=expectedHeader[d];
                 if (needle === undefined || needle === null) needle = "";
                 if (typeof needle === 'object') needle = JSON.stringify(needle);
-                opts=dropdowns[d].options;
+                let opts=dropdowns[d].options;
                 if (!opts) {
                     dropdowns[d].value=needle
                 }
                 else {
                     for(var i=0;i<opts.length;i++){
                         var o=opts[i];
-                        proceed=o.value.includes(needle) 
+                        let proceed=o.value.includes(needle) 
                         if(proceed){
                             dropdowns[d].value=needle
                         }
@@ -1876,7 +1876,7 @@ interfaceUtils._mGenUIFuncs.fillRadiosAndChecksIfExpectedCSV=function(uid,expect
         var radios=interfaceUtils._mGenUIFuncs.getTabRadiosAndChecks(uid);
         for(var d in expectedRadios){
             if(radios[d]){
-                needle=expectedRadios[d];
+                let needle=expectedRadios[d];
                 radios[d].checked=needle;
                 if (needle) {
                     var event = new Event('change');
@@ -2020,7 +2020,7 @@ interfaceUtils._mGenUIFuncs.groupUI=async function(uid, force){
     var countShape=0;
     var countColor=0;
     var favouriteShapes = [6,0,2,1,3,4,10,5]
-    for(i of Object.keys(data_obj["_groupgarden"]).sort()){
+    for(let i of Object.keys(data_obj["_groupgarden"]).sort()){
 
         var tree = data_obj["_groupgarden"][i]
         
@@ -2230,7 +2230,7 @@ interfaceUtils._mGenUIFuncs.groupUI=async function(uid, force){
 interfaceUtils.updateColorDict = function(uid) {
     var data_obj = dataUtils.data[uid];
     jsonDict = {};
-    for(i in data_obj["_groupgarden"]){
+    for(let i in data_obj["_groupgarden"]){
         var tree = data_obj["_groupgarden"][i]
         var escapedID=tree["treeID"].replace(/ /g,"_");
         var colorInput = interfaceUtils.getElementById(uid+"_"+escapedID+"_color");
@@ -2246,7 +2246,7 @@ interfaceUtils.updateColorDict = function(uid) {
 interfaceUtils.updateShapeDict = function(uid) {
     var data_obj = dataUtils.data[uid];
     jsonDict = {};
-    for(i in data_obj["_groupgarden"]){
+    for(let i in data_obj["_groupgarden"]){
         var tree = data_obj["_groupgarden"][i]
         var escapedID=tree["treeID"].replace(/ /g,"_");
         var shapeInput = interfaceUtils.getElementById(uid+"_"+escapedID+"_shape");
@@ -2295,29 +2295,31 @@ interfaceUtils.loadingModal = function(text, title) {
 }
 
 interfaceUtils.alert = function(text, title) {
+    let divpane;
     if (!title) title = "Alert";
     var modalUID = "messagebox"
-    button1=HTMLElementUtils.createButton({"extraAttributes":{ "class":"btn btn-primary mx-2", "data-bs-dismiss":"modal"}})
+    let button1=HTMLElementUtils.createButton({"extraAttributes":{ "class":"btn btn-primary mx-2", "data-bs-dismiss":"modal"}})
     button1.innerText = "Ok";
-    buttons=divpane=HTMLElementUtils.createElement({"kind":"div"});
+    let buttons=divpane=HTMLElementUtils.createElement({"kind":"div"});
     buttons.appendChild(button1);
     button1.addEventListener("click",function(event) {
         $(`#${modalUID}_modal`).modal('hide');
     })
-    content=HTMLElementUtils.createElement({"kind":"p", "extraAttributes":{"class":""}});
+    let content=HTMLElementUtils.createElement({"kind":"p", "extraAttributes":{"class":""}});
     content.innerHTML = text;
     interfaceUtils.generateModal(title, content, buttons, modalUID);
 }
 
 interfaceUtils.confirm = function (text, title) {
     return new Promise((resolve, reject) => {
+        let divpane
         if (!title) title = "Confirm";
         var modalUID = "messagebox"
-        button1=HTMLElementUtils.createButton({"extraAttributes":{ "class":"btn btn-primary mx-2"}})
+        let button1=HTMLElementUtils.createButton({"extraAttributes":{ "class":"btn btn-primary mx-2"}})
         button1.innerText = "Yes";
-        button2=HTMLElementUtils.createButton({"extraAttributes":{ "class":"btn btn-secondary mx-2", "data-bs-dismiss":"modal"}})
+        let button2=HTMLElementUtils.createButton({"extraAttributes":{ "class":"btn btn-secondary mx-2", "data-bs-dismiss":"modal"}})
         button2.innerText = "No";
-        buttons=divpane=HTMLElementUtils.createElement({"kind":"div"});
+        let buttons=divpane=HTMLElementUtils.createElement({"kind":"div"});
         buttons.appendChild(button1);
         buttons.appendChild(button2);
         button1.addEventListener("click",function(event) {
@@ -2328,7 +2330,7 @@ interfaceUtils.confirm = function (text, title) {
             $(`#${modalUID}_modal`).modal('hide');;
             resolve(false);
         })
-        content=HTMLElementUtils.createElement({"kind":"p", "extraAttributes":{"class":""}});
+        let content=HTMLElementUtils.createElement({"kind":"p", "extraAttributes":{"class":""}});
         content.innerHTML = text;
         interfaceUtils.generateModal(title, content, buttons, modalUID);
     })
@@ -2337,12 +2339,13 @@ interfaceUtils.confirm = function (text, title) {
 interfaceUtils.prompt = function (text, value, title, type) {
     return new Promise((resolve, reject) => {
         if (!title) title = "Prompt";
+        let divpane;
         var modalUID = "messagebox"
-        button1=HTMLElementUtils.createButton({"extraAttributes":{ "class":"btn btn-primary mx-2"}})
+        let button1=HTMLElementUtils.createButton({"extraAttributes":{ "class":"btn btn-primary mx-2"}})
         button1.innerText = "Ok";
-        button2=HTMLElementUtils.createButton({"extraAttributes":{ "class":"btn btn-secondary mx-2", "data-bs-dismiss":"modal"}})
+        let button2=HTMLElementUtils.createButton({"extraAttributes":{ "class":"btn btn-secondary mx-2", "data-bs-dismiss":"modal"}})
         button2.innerText = "Cancel";
-        buttons=divpane=HTMLElementUtils.createElement({"kind":"div"});
+        let buttons=divpane=HTMLElementUtils.createElement({"kind":"div"});
         buttons.appendChild(button1);
         buttons.appendChild(button2);
         button1.addEventListener("click",function(event) {
@@ -2353,13 +2356,14 @@ interfaceUtils.prompt = function (text, value, title, type) {
             $(`#${modalUID}_modal`).modal('hide');;
             reject();
         })
-        content=HTMLElementUtils.createElement({"kind":"div"});
+        let content=HTMLElementUtils.createElement({"kind":"div"});
             
-        row0=HTMLElementUtils.createElement({"kind":"p", "extraAttributes":{"class":""}});
+        let row0=HTMLElementUtils.createElement({"kind":"p", "extraAttributes":{"class":""}});
         row0.innerHTML = text
-        row1=HTMLElementUtils.createRow({});
-            col11=HTMLElementUtils.createColumn({"width":12});
-                if (type === undefined) {
+        let row1=HTMLElementUtils.createRow({});
+            let col11=HTMLElementUtils.createColumn({"width":12});
+            let input112;    
+            if (type === undefined) {
                     input112=HTMLElementUtils.createElement({"kind":"input", "id":"confirmModalValue", "extraAttributes":{ "class":"form-text-input form-control", "type":"text", "value":value}});
                 }
                 else {
@@ -2380,7 +2384,7 @@ interfaceUtils.generateModal = function(title, content, buttons, uid, noClose, n
     if (!noBackdrop) noBackdrop = false;
     if (!noClose) noClose = false;
     if (!uid) uid = "default";
-    modalWindow = document.getElementById(uid + "_modal");
+    let modalWindow = document.getElementById(uid + "_modal");
     if (! modalWindow) {
         var div = HTMLElementUtils.createElement({"kind":"div", "id":uid+"_modal", "extraAttributes":{ "class":"modal in fade", "tabindex":"-1", "role":"dialog", "aria-hidden":"true", "tabindex":"-1"}});
         div.innerHTML = `
@@ -2405,10 +2409,10 @@ interfaceUtils.generateModal = function(title, content, buttons, uid, noClose, n
         document.getElementById(`${uid}_closeButton`).classList.remove("d-none");
     }
     document.getElementById(`${uid}_modalTitle`).innerHTML = title;
-    modalWindowContent = document.getElementById(`${uid}_modalContent`)
+    let modalWindowContent = document.getElementById(`${uid}_modalContent`)
     modalWindowContent.innerHTML = "";
     modalWindowContent.appendChild(content);
-    modalWindowButtons = document.getElementById(`${uid}_modalButtons`)
+    let modalWindowButtons = document.getElementById(`${uid}_modalButtons`)
     modalWindowButtons.innerHTML = "";
     modalWindowButtons.appendChild(buttons);
 
@@ -2695,12 +2699,14 @@ interfaceUtils.createDownloadButtonRegions = function(options) {
 }
 
 interfaceUtils.addMenuItem = function(itemTree, callback, before) {
-    itemID = "menubar";
-    rootElement = document.querySelector("#navbar-menu .navbar-nav");
+    let itemID = "menubar";
+    let rootElement = document.querySelector("#navbar-menu .navbar-nav");
     for (var i = 0; i<itemTree.length; i++) {
         itemID += "_" + HTMLElementUtils.stringToId(itemTree[i]);
         if (!document.getElementById(itemID)) {
-            liItem = HTMLElementUtils.createElement({"kind":"li", "extraAttributes":{"class":"nav-item dropdown"}})
+            let liItem = HTMLElementUtils.createElement({"kind":"li", "extraAttributes":{"class":"nav-item dropdown"}})
+            let aElement;
+            let spanMore
             if (i == 0)
                 rootElement.insertBefore(liItem, document.getElementById("nav-item-title"));
             else if (before)
@@ -2964,7 +2970,7 @@ interfaceUtils._rGenUIFuncs.createTable=function(){
     interfaceUtils._rGenUIFuncs.checkboxToEye(check0);
     thead2.appendChild(tr);
 
-    for (i of Object.keys(singleRegionClasses.sort())) {
+    for (let i of Object.keys(singleRegionClasses.sort())) {
         let regionClass = singleRegionClasses[i];
         let regionClassID = HTMLElementUtils.stringToId("region_" + regionClass);
         let numRegions = allRegionClasses.filter(x => x==regionClass).length
@@ -2995,7 +3001,7 @@ interfaceUtils._rGenUIFuncs.createTable=function(){
         tr.appendChild(td4);
         tr.appendChild(td5);
         tr.appendChild(td6);
-        
+        let rClass;
         if (regionClass) rClass = regionClass; else rClass = "";
         var regionclasstext = HTMLElementUtils.inputTypeText({
             extraAttributes: {
@@ -3175,8 +3181,8 @@ interfaceUtils._rGenUIFuncs.createTable=function(){
                     x => x.regionClass==selectedRegionClass
                 )
                 let subGroupRegions = groupRegions.slice(0, numberOfItemsPerPage);
-                regionDetails = document.createDocumentFragment();
-                for (region of subGroupRegions) {
+                let regionDetails = document.createDocumentFragment();
+                for (let region of subGroupRegions) {
                     regionDetails.appendChild(interfaceUtils._rGenUIFuncs.createRegionRow(region.id));
                 }
                 tbody_subregions.appendChild(regionDetails);
@@ -3421,3 +3427,5 @@ interfaceUtils._rGenUIFuncs.createRegionRow=function(regionId){
     };
     return tr;
 }
+
+export default interfaceUtils

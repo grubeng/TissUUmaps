@@ -7,7 +7,7 @@
 /**
 * @namespace HTMLElementUtils
 */
-HTMLElementUtils = {}
+const HTMLElementUtils = {}
 
 /** Create a checkbox input  */
 HTMLElementUtils.inputTypeCheckbox = function (params) {
@@ -403,3 +403,5 @@ HTMLElementUtils.stringToId = function (inputString) {
     if (!inputString) return "";
     return inputString.replace(/\W/g, '')
 }
+
+export default HTMLElementUtils

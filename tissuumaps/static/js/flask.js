@@ -1,4 +1,4 @@
-flask = {}
+const flask = {}
 
 flask.init = function () {
     $(document).on( "click", ".layerSettingButton", function(){
@@ -170,35 +170,37 @@ flask.server.init = function () {
 
 
     interfaceUtils.addMenuItem(["File","Open"],function(){
+        let divpane;
         var modalUID = "messagebox"
-        button1=HTMLElementUtils.createButton({"extraAttributes":{ "class":"btn btn-primary mx-2"}})
+        let button1=HTMLElementUtils.createButton({"extraAttributes":{ "class":"btn btn-primary mx-2"}})
         button1.innerText = "Cancel";
         button1.addEventListener("click",function(event) {
             $(`#${modalUID}_modal`).modal('hide');
         })
-        buttons=divpane=HTMLElementUtils.createElement({"kind":"div"});
+        let buttons=divpane=HTMLElementUtils.createElement({"kind":"div"});
         buttons.appendChild(button1);
-        content=HTMLElementUtils.createElement({"kind":"div"});
+        let content=HTMLElementUtils.createElement({"kind":"div"});
         content.innerHTML = "<iframe src='/filetree' width='100%' height='300px'></iframe>";
         interfaceUtils.generateModal ("Open file", content, buttons, modalUID);
     },true);
 
     // Add layer button
-    div = HTMLElementUtils.createElement({"kind":"div", extraAttributes:{"class":"px-3 my-2"}});
-    button = HTMLElementUtils.createElement({"kind":"div", extraAttributes:{"class":"btn btn-primary btn-sm"}});
+    let div = HTMLElementUtils.createElement({"kind":"div", extraAttributes:{"class":"px-3 my-2"}});
+    let button = HTMLElementUtils.createElement({"kind":"div", extraAttributes:{"class":"btn btn-primary btn-sm"}});
     button.innerHTML = "Add image layer";
     div.append(button)
     document.getElementById("image-overlay-panel").after(div)
     button.addEventListener("click", function(){
         var modalUID = "messagebox"
-        button1=HTMLElementUtils.createButton({"extraAttributes":{ "class":"btn btn-primary mx-2"}})
+        let divpane;
+        let button1=HTMLElementUtils.createButton({"extraAttributes":{ "class":"btn btn-primary mx-2"}})
         button1.innerText = "Cancel";
         button1.addEventListener("click",function(event) {
             $(`#${modalUID}_modal`).modal('hide');
         })
-        buttons=divpane=HTMLElementUtils.createElement({"kind":"div"});
+        let buttons=divpane=HTMLElementUtils.createElement({"kind":"div"});
         buttons.appendChild(button1);
-        content=HTMLElementUtils.createElement({"kind":"div"});
+        let content=HTMLElementUtils.createElement({"kind":"div"});
         content.innerHTML = "<iframe src='/filetree?addlayer=1' width='100%' height='300px'></iframe>";
         interfaceUtils.generateModal ("Open file", content, buttons, modalUID);
     });
@@ -285,3 +287,5 @@ window.addEventListener("message", evt => {
 
     
 });
+
+export default flask

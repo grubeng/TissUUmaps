@@ -7,7 +7,7 @@
 /**
  * @namespace OSDViewerUtils
  */
-OSDViewerUtils={
+const OSDViewerUtils={
   _currentZoom:0,
   _currentPan:0,
 }
@@ -61,3 +61,5 @@ OSDViewerUtils.addTiledImage=function(options){
 
   tmapp[op+"_viewer"].addTiledImage(options);
 }
+
+export default OSDViewerUtils

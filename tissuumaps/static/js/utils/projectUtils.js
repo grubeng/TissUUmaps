@@ -9,7 +9,7 @@
  * @version projectUtils 2.0
  * @classdesc The root namespace for projectUtils.
  */
-projectUtils = {
+const projectUtils = {
      _activeState:{},
      _hideCSVImport: false,
      _settings:[
@@ -70,12 +70,12 @@ projectUtils.getActiveProject = function () {
             }
         }
         function makeButtons (callback) {
-            uid = tabsNotSaved.pop();
+            let uid = tabsNotSaved.pop();
             console.log("uid:", uid, tabsNotSaved)
             if (uid === undefined) {
                 return callback();
             }
-            tabName = document.getElementById(uid + "_tab-name").value;
+            let tabName = document.getElementById(uid + "_tab-name").value;
             projectUtils.makeButtonFromTab(uid, "The tab "+tabName+" is not saved as a button yet","modalButton_" + uid)
             .then(() => makeButtons(callback));
         }
@@ -661,3 +661,5 @@ projectUtils.addLegend = function (htmlContent) {
     elt.style.display="block";
     elt.innerHTML = htmlContent;
 }
+
+export default projectUtils

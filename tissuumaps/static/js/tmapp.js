@@ -9,7 +9,7 @@
  * @version tmapp 2.0
  * @classdesc The root namespace for tmapp.
  */
-tmapp = {
+const tmapp = {
     _url_suffix: "",
     _scrollDelay: 900,
     fixed_file: "",
@@ -194,7 +194,7 @@ tmapp.init = function () {
         tmapp[op + "_viewer"].imageLoaderLimit = 1;
     });
     
-    elt = document.getElementById("ISS_globalmarkersize");
+    let elt = document.getElementById("ISS_globalmarkersize");
     if (elt) {
         tmapp[vname].addControl(elt,{
             anchor: OpenSeadragon.ControlAnchor.TOP_RIGHT
@@ -336,3 +336,5 @@ $( document ).ready(function() {
         }
     });
 });
+
+export default tmapp

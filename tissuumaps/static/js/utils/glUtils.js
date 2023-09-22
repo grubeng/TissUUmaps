@@ -8,7 +8,7 @@
  * @namespace glUtils
  * @property {Boolean} _initialized True when glUtils has been initialized
  */
-glUtils = {
+const glUtils = {
     _initialized: false,
     _options: {antialias: false, premultipliedAlpha: true, preserveDrawingBuffer: true},
     _markershapes: "misc/markershapes.png",
@@ -2451,3 +2451,5 @@ glUtils.init = function() {
     glUtils._initialized = true;
     glUtils.resize();  // Force initial resize to OSD canvas size
 }
+
+export default glUtils

@@ -9,7 +9,7 @@
  * @property {Object} dataUtils.data contains all data per tab
  * @property {array} dataUtils._d3LUTs All options ofr colormaps coming from d3
  */
-dataUtils = {
+const dataUtils = {
     data:{
         /*
         "U23423R":{
@@ -95,7 +95,7 @@ dataUtils.startCSVcascade= function(event){
 /**
  * @deprecated Not required anymore, but kept for backwards-compatibility
  */
-CPDataUtils={};
+let CPDataUtils={};
 
 /** 
 * created the _processeddata list to be used in rendering
@@ -207,6 +207,7 @@ dataUtils.getAllH5Data = async function(data_id, alldrops){
 */
     dataUtils.updateViewOptions = async function(data_id, force_reload_all, reloadH5){
     try {
+        let message;
         if (reloadH5 === undefined) reloadH5 = true;
         let progressParent=interfaceUtils.getElementById(data_id+"_csv_progress_parent");
         progressParent.classList.remove("d-none");
@@ -886,3 +887,5 @@ dataUtils._quadtreeSize = function(tree) {
     //console.timeEnd("Get quadtree size");
     return size;
 }
+
+export default dataUtils

@@ -263,7 +263,7 @@ regionUtils.closePolygon = function () {
             });
         })
     }
-    geoJSONObjects = {
+    let geoJSONObjects = {
         "type": "FeatureCollection",
         "features": Object.values(regionsObjects).map (function(Region, i) {
             return {

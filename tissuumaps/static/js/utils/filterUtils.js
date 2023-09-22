@@ -11,7 +11,7 @@
  * @property {Object} filterUtils._filterItems - 
  * @property {String} filterUtils._compositeMode - 
  */
- filterUtils = {
+const filterUtils = {
     // Choose between ["Brightness", "Exposure", "Hue", "Contrast", "Vibrance", "Noise", 
     //                 "Saturation","Gamma","Invert","Greyscale","Threshold","Erosion","Dilation",
     //                 "Colormap", "SplitChannel"]
@@ -307,7 +307,7 @@
     _lastFilters:{},
     _compositeMode:"source-over"
 }
-RESCALE = function(vmin,vmax) {
+function RESCALE(vmin,vmax) {
             if (vmin < 0 || vmax>255) {
                 throw new Error('Contrast adjustment must be positive.');
             }
@@ -331,7 +331,7 @@ RESCALE = function(vmin,vmax) {
                 context.putImageData(imgData, 0, 0);
                 callback();
             };
-        },
+        }
         
 Caman.Filter.register("splitChannel", function (channelValue) {
     this.process("splitChannel", function (rgba) {
@@ -355,11 +355,11 @@ Caman.Filter.register("splitChannel", function (channelValue) {
     var settingsPanel = document.getElementById("filterSettings");
     if (!settingsPanel) return;
     for (var filter in filterUtils._filters) {
-        selectParams = {
+        let selectParams = {
             eventListeners:{
                 "change": function (e) {
-                    filterName = e.srcElement.getAttribute("filter");
-                    checked = e.srcElement.checked;
+                    let filterName = e.srcElement.getAttribute("filter");
+                    let checked = e.srcElement.checked;
                     if (checked)
                         filterUtils._filtersUsed.push(filterName);
                     else 
@@ -378,7 +378,7 @@ Caman.Filter.register("splitChannel", function (channelValue) {
                 "filter": filter
             }
         }
-        select = HTMLElementUtils.inputTypeCheckbox(selectParams);
+        let select = HTMLElementUtils.inputTypeCheckbox(selectParams);
         select.classList.add("form-check-input");
         settingsPanel.appendChild(select);
         var label = document.createElement("label");
@@ -391,10 +391,10 @@ Caman.Filter.register("splitChannel", function (channelValue) {
         form.appendChild(label);
         settingsPanel.appendChild(form);
     }
-    modeParams = {
+    let modeParams = {
         eventListeners:{
             "change": function (e) {
-                compositeMode = e.srcElement.value;
+                let compositeMode = e.srcElement.value;
                 filterUtils._compositeMode = compositeMode;
                 filterUtils.setCompositeOperation();
             }
@@ -431,7 +431,7 @@ Caman.Filter.register("splitChannel", function (channelValue) {
     var label = document.createElement("label");
     label.innerHTML = "Merging mode:&nbsp;";
     settingsPanel.appendChild(label);
-    select = HTMLElementUtils.selectTypeDropDown(modeParams);
+    let select = HTMLElementUtils.selectTypeDropDown(modeParams);
     select.classList.add("form-select", "form-select-sm");
     select.value = filterUtils._compositeMode;
     filterUtils.setCompositeOperation();
@@ -444,7 +444,7 @@ Caman.Filter.register("splitChannel", function (channelValue) {
  * @param {Number} filterName
  **/
 filterUtils.getFilterParams = function(filterName) {
-    filterParams = filterUtils._filters[filterName].params;
+    let filterParams = filterUtils._filters[filterName].params;
     filterParams.eventListeners = {
         "input": filterUtils.getFilterItems
     };
@@ -473,9 +473,9 @@ filterUtils.getFilterFunction = function(filterName) {
         if (JSON.stringify(filterUtils._lastFilters) == JSON.stringify(filterUtils._filterItems)) {
             return;
         }
-        filters = [];
+        let filters = [];
         for (const layer in filterUtils._filterItems) {
-            processors = [];
+            let processors = [];
             for(var filterIndex=0;filterIndex<filterUtils._filterItems[layer].length;filterIndex++) {
                 processors.push(
                     filterUtils._filterItems[layer][filterIndex].filterFunction(filterUtils._filterItems[layer][filterIndex].value)
@@ -515,8 +515,8 @@ filterUtils.getFilterFunction = function(filterName) {
     var op = tmapp["object_prefix"];
     for (const layer in filterUtils._filterItems) {
         for(var filterIndex=0;filterIndex<filterUtils._filterItems[layer].length;filterIndex++) {
-            item = filterUtils._filterItems[layer][filterIndex];
-            filterRange = document.querySelector('[filter="'+item.name+'"][layer="'+layer+'"]');
+            let item = filterUtils._filterItems[layer][filterIndex];
+            let filterRange = document.querySelector('[filter="'+item.name+'"][layer="'+layer+'"]');
             if (filterRange) {
                 if (filterRange.type == "range" || filterRange.type == "select-one")
                     filterRange.value = item.value;
@@ -548,17 +548,17 @@ filterUtils.getFilterItems = function() {
     var op = tmapp["object_prefix"];
     
     overlayUtils.waitLayersReady().then(() => {    
-        filterInputsRanges = document.getElementsByClassName("filterInput");
-        items = {};
-        for (i = 0; i < filterInputsRanges.length; i++) {
+        let filterInputsRanges = document.getElementsByClassName("filterInput");
+        let items = {};
+        for (let i = 0; i < filterInputsRanges.length; i++) {
             var filterLayer = filterInputsRanges[i].getAttribute("layer");
             items[filterLayer] = []
         }
-        for (i = 0; i < filterInputsRanges.length; i++) {
+        for (let i = 0; i < filterInputsRanges.length; i++) {
             var filterName = filterInputsRanges[i].getAttribute("filter");
             var filterLayer = filterInputsRanges[i].getAttribute("layer");
             var filterFunction = filterUtils.getFilterFunction(filterName);
-            
+            let inputValue;
             if (filterInputsRanges[i].type == "range" || filterInputsRanges[i].type == "select-one")
                 inputValue = filterInputsRanges[i].value;
             else if (filterInputsRanges[i].type == "checkbox")
@@ -595,7 +595,7 @@ filterUtils.setCompositeOperation = function() {
         var filterCompositeMode = document.getElementById("filterCompositeMode");
         filterCompositeMode.value = filterUtils._compositeMode;
         tmapp[op + "_viewer"].compositeOperation = filterUtils._compositeMode;
-        for (i = 0; i < tmapp[op + "_viewer"].world.getItemCount(); i++) {
+        for (let i = 0; i < tmapp[op + "_viewer"].world.getItemCount(); i++) {
             tmapp[op + "_viewer"].world.getItemAt(i).setCompositeOperation(filterUtils._compositeMode);
         }
     })
@@ -603,6 +603,7 @@ filterUtils.setCompositeOperation = function() {
 
 /** Create an HTML filter */
 filterUtils.createHTMLFilter = function (params) {
+    let filterInput;
     if (!params) {
         return null;
     }
@@ -640,9 +641,9 @@ filterUtils.createHTMLFilter = function (params) {
     if (type != "color") {
         filterInput.setAttribute("list", "filterDatalist-" + params.filter + "-" + params.layer);
 
-        datalist = document.createElement("datalist");
+        let datalist = document.createElement("datalist");
         datalist.setAttribute("id", "filterDatalist-" + params.filter + "-" + params.layer);
-        option = document.createElement("option");
+        let option = document.createElement("option");
         option.text = params.value;
         datalist.appendChild(option);
 
@@ -650,11 +651,11 @@ filterUtils.createHTMLFilter = function (params) {
     }else {
         filterInput.setAttribute("list", "filterDatalist-" + params.filter + "-" + params.layer);
 
-        datalist = document.createElement("datalist");
+        let datalist = document.createElement("datalist");
         datalist.setAttribute("id", "filterDatalist-" + params.filter + "-" + params.layer);
         const colors = ['#FFFFFF', '#FF0000', '#00FF00','#0000FF','#FF00FF','#FFFF00','#00FFFF',"#FF007F","#7F00FF","#007FFF","#00FF7F","#7FFF00","#FF7F00"];
         for (const element of colors) {
-            option = document.createElement("option");
+            let option = document.createElement("option");
             option.text = element;
             datalist.appendChild(option);
         }
@@ -664,3 +665,5 @@ filterUtils.createHTMLFilter = function (params) {
     }
     return filterInput;
 }
+
+export default filterUtils

@@ -9,7 +9,7 @@
  * @version projectUtils 2.0
  * @classdesc The root namespace for projectUtils.
  */
- pluginUtils = {
+const pluginUtils = {
     _pluginList: []
  }
 
@@ -274,3 +274,5 @@ pluginUtils.loadParameters = function (pluginID, pluginDiv, parameters) {
     }
     
 }
+
+export default pluginUtils
