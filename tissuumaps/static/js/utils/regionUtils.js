@@ -15,7 +15,8 @@
  * @property {Number}   regionUtils._epsilonDistance - Distance at which a click from the first point will consider to close the region, 
  * @property {Object}   regionUtils._regions - Object that contains the regions in the viewer, 
  * @property {String}   regionUtils._drawingclass - String that accompanies the classes of the polygons in the interface"drawPoly", 
- * @property {Object[]} regionUtils._edgeLists - Data structure used for rendering regions with WebGL
+ * @property {Object[]} regionUtils._edgeListsByLayer - Data structure used for rendering regions with WebGL
+ * @property {Object[]} regionUtils._edgeListsByLayerSplit - Data structure used for rendering regions with WebGL
  * @property {Object[]} regionUtils._regionToColorLUT - LUT for storing color and visibility per object ID
  * @property {Object{}} regionUtils._regionIDToIndex - Mapping between region ID (string) and object ID (index)
  * @property {Object{}} regionUtils._regionIndexToID - Mapping between object ID (index) and region ID (string)
@@ -33,7 +34,8 @@ const regionUtils = {
     _epsilonDistance: 0.004,
     _regions: {},
     _drawingclass: "drawPoly",
-    _edgeLists: [],
+    _edgeListsByLayer: {},
+    _edgeListsByLayerSplit: {},
     _regionToColorLUT: [],
     _regionIDToIndex: {},
     _regionIndexToID: {}
@@ -58,7 +60,7 @@ regionUtils.resetManager = function () {
 regionUtils.getLayerFromCoord = function (coordinates) {
     var op = tmapp["object_prefix"];
     var viewer = tmapp[op + "_viewer"];
-    for (var i = viewer.world.getItemCount()-1; i >= 0; i--) {
+    for (var i = 0; i < viewer.world.getItemCount(); i++) {
         let tiledImage = viewer.world.getItemAt(i);
         let imageCoord = tiledImage.viewportToImageCoordinates(
             coordinates.x, coordinates.y, true
@@ -524,14 +526,7 @@ regionUtils.globalPointInPath=function(x,y,path,tmpPoint) {
                 const x = markerData[xselector][d] * options.coordFactor;
                 const y = markerData[yselector][d] * options.coordFactor;
                 if (x >= x0 && x < x3 && y >= y0 && y < y3) {
-                    // Note: expanding each point into a full object will be
-                    // very inefficient memory-wise for large datasets, so
-                    // should return points as array of indices instead (TODO)
-                    let p = {};
-                    for (const key of columns) {
-                        p[key] = markerData[key][d];
-                    }
-                    pointsInside.push(p);
+                    pointsInside.push(d);
                 }
             }
         }
@@ -539,6 +534,30 @@ regionUtils.globalPointInPath=function(x,y,path,tmpPoint) {
     });
     return pointsInside;
  }
+
+ /**
+  * @summary Filter a list of point indices by layer
+  * @param {*} points 
+  * @param {*} dataObj 
+  * @param {*} collectionIndex 
+  */
+regionUtils.filterPointsInLayer = function (points, dataObj, collectionIndex) {
+    // check if we are in fixed collection index or not:
+    const useCollectionItemFromMarker = dataObj["_collectionItem_col"] != null;
+    const collectionItemFixed = dataObj["_collectionItem_fixed"];
+
+    if (useCollectionItemFromMarker) {
+        const collectionItemCol = dataObj["_collectionItem_col"];
+        const collectionItemArray = dataObj._processeddata[collectionItemCol];
+        // points are indices in collectionItemArray.
+        // We now filter points d where collectionItemArray[d] == collectionIndex
+        const pointsInLayer = points.filter(d => collectionItemArray[d] == collectionIndex);
+        return pointsInLayer;
+    }
+    else {
+        return (collectionItemFixed == collectionIndex)? points : [];
+    }
+}
 /** 
  *  @param {Object} quadtree d3.quadtree where the points are stored
  *  @param {Number} x0 X coordinate of one point in a bounding box
@@ -555,24 +574,20 @@ regionUtils.searchTreeForPointsInRegion = function (quadtree, x0, y0, x3, y3, re
         throw {name : "NotImplementedError", message : "ViewerPointInPath not yet implemented."}; 
     }
 
-    // FIXME: For now, regions will always have the first image as parent
-    const image = tmapp["ISS_viewer"].world.getItemAt(0);
-    const imageWidth = image ? image.getContentSize().x : 1;
-    const imageHeight = image ? image.getContentSize().y : 1;
-    const imageBounds = [0, 0, imageWidth, imageHeight];
-
-    // Note: searchTreeForPointsInBbox() currently returns a list of points
-    // in array-of-structs format. This will make the memory usage explode for
-    // large markersets (or for markers with many attributes), so it would be
-    // better to just return a list of point indices instead.
     const pointInBbox = regionUtils.searchTreeForPointsInBbox(quadtree, x0, y0, x3, y3, options);
 
+    const dataObj = dataUtils.data[options.dataset];
+    const collectionIndex = regionUtils._regions[regionid].collectionIndex;
+    const pointInLayer = regionUtils.filterPointsInLayer(pointInBbox, dataObj, collectionIndex)
+    
     let countsInsideRegion = 0;
     let pointsInside = [];
-    for (d of pointInBbox) {
-        const x = d[xselector] * options.coordFactor;
-        const y = d[yselector] * options.coordFactor;
-        if (regionUtils._pointInRegion(x, y, regionid, imageBounds)) {
+    const markerData = dataUtils.data[options.dataset]["_processeddata"];
+
+    for (let d of pointInLayer) {
+        const x = markerData[xselector][d] * options.coordFactor;
+        const y = markerData[yselector][d] * options.coordFactor;
+        if (regionUtils._pointInRegion(x, y, regionid)) {
             countsInsideRegion += 1;
             pointsInside.push(d);
         }
@@ -759,17 +774,8 @@ regionUtils.changeRegion = function (regionid) {
 
 /** 
  *  TODO */
-regionUtils.analyzeRegion = function (regionid) {
-    var op = tmapp["object_prefix"];
-
-    function compare(a, b) {
-        if (a.count > b.count)
-            return -1;
-        if (a.count < b.count)
-            return 1;
-        return 0;
-    }
-
+regionUtils.getPointsInRegion = function (regionid) {
+    
     function clone(obj) {
         if (null == obj || "object" != typeof obj) return obj;
         var copy = obj.constructor();
@@ -782,7 +788,9 @@ regionUtils.analyzeRegion = function (regionid) {
     regionUtils._regions[regionid].associatedPoints=[];
     regionUtils._regions[regionid].barcodeHistogram=[];
     allDatasets = Object.keys(dataUtils.data);
+    var allPointsInside = {};
     for (var uid of allDatasets) {
+        allPointsInside[uid] = [];
         var allkeys=Object.keys(dataUtils.data[uid]["_groupgarden"]);
 
         var datapath = dataUtils.data[uid]["_csv_path"];
@@ -798,8 +806,8 @@ regionUtils.analyzeRegion = function (regionid) {
 
         for (var codeIndex in allkeys) {
             var code = allkeys[codeIndex];
-
-            var pointsInside=regionUtils.searchTreeForPointsInRegion(dataUtils.data[uid]["_groupgarden"][code],
+            let groupgarden = dataUtils.data[uid]["_groupgarden"][code];
+            var pointsInside=regionUtils.searchTreeForPointsInRegion(groupgarden,
                 regionUtils._regions[regionid]._gxmin,regionUtils._regions[regionid]._gymin,
                 regionUtils._regions[regionid]._gxmax,regionUtils._regions[regionid]._gymax,
                 regionid, {
@@ -809,8 +817,19 @@ regionUtils.analyzeRegion = function (regionid) {
                     "dataset":uid,
                     "coordFactor":dataUtils.data[uid]["_coord_factor"]
                 });
+            const markerData = dataUtils.data[uid]["_processeddata"];
+            const columns = dataUtils.data[uid]["_csv_header"];
             if(pointsInside.length>0){
-                pointsInside.forEach(function(p){
+                pointsInside.forEach(function(d){
+                    allPointsInside[uid].push(d);
+                    // Note: expanding each point into a full object will be
+                    // very inefficient memory-wise for large datasets, so
+                    // should return points as array of indices instead (TODO)
+                    let p = {};
+                    for (const key of columns) {
+                        p[key] = markerData[key][d];
+                    }
+
                     var pin=clone(p);
                     pin.regionid=regionid;
                     pin.dataset=datapath
@@ -819,8 +838,151 @@ regionUtils.analyzeRegion = function (regionid) {
             }
         }
     }
+    return allPointsInside;
+}
+
+regionUtils.analyzeRegion = function (regionid) {
+    var op = tmapp["object_prefix"];
+
+    function compare(a, b) {
+        if (a.count > b.count)
+            return -1;
+        if (a.count < b.count)
+            return 1;
+        return 0;
+    }
+    regionUtils.getPointsInRegion(regionid);
     regionUtils._regions[regionid].barcodeHistogram.sort(compare);
 }
+regionUtils.getRegionStatistics = function (regionid) {
+    function createMeasureTable(regionMeasures, div) {
+        const containerDiv = document.createElement('div');
+        containerDiv.classList.add('overflow-auto');
+
+        const table = document.createElement('table');
+        table.classList.add('table', 'table-striped', 'small');
+        const tableHead = document.createElement('thead');
+        const tableBody = document.createElement('tbody');
+      
+        // Create the header row
+        const headerRow1 = document.createElement('tr');
+        const headerRow2 = document.createElement('tr');
+      
+        // Loop through the keys of the first measurement to create table headers
+        for (const measureKey in regionMeasures) {
+          const measureValue = regionMeasures[measureKey];
+          const headerCell = document.createElement('th');
+      
+          if (typeof measureValue === 'object') {
+            // If the value is an object, create sub-headers for its keys
+            headerCell.setAttribute('colspan', Object.keys(measureValue).length);
+            headerCell.classList.add('py-1');
+            headerCell.textContent = measureKey;
+            headerRow1.appendChild(headerCell);
+      
+            for (const subKey in measureValue) {
+              const subHeaderCell = document.createElement('th');
+              subHeaderCell.classList.add('py-1');
+              subHeaderCell.textContent = subKey;
+              headerRow2.appendChild(subHeaderCell);
+            }
+          } else {
+            // If the value is not an object, create a single header cell
+            headerCell.setAttribute('rowspan', "2");
+            headerCell.classList.add('align-middle', "border-bottom", "border-dark");
+            headerCell.textContent = measureKey;
+            headerRow1.appendChild(headerCell);
+          }
+        }
+      
+        tableHead.appendChild(headerRow1);
+        tableHead.appendChild(headerRow2);
+      
+        // Create the data row
+        const dataRow = document.createElement('tr');
+      
+        for (const measureKey in regionMeasures) {
+          const measureValue = regionMeasures[measureKey];
+          const dataCell = document.createElement('td');
+      
+          if (typeof measureValue === 'object') {
+            // If the value is an object, create sub-cells for its values
+            for (const subKey in measureValue) {
+              const subDataCell = document.createElement('td');
+              subDataCell.textContent = measureValue[subKey].toFixed(2);;
+              dataRow.appendChild(subDataCell);
+            }
+          } else {
+            // If the value is not an object, create a single data cell
+            dataCell.textContent = measureValue.toFixed(2);;
+            dataRow.appendChild(dataCell);
+          }
+        }
+      
+        tableBody.appendChild(dataRow);
+      
+        table.appendChild(tableHead);
+        table.appendChild(tableBody);
+      
+        // Create the title element and append it before the table
+        const title = document.createElement('div');
+        title.classList.add('fw-bold', 'mb-2');
+        title.textContent = 'Measurements';
+      
+        div.appendChild(title);
+        div.appendChild(containerDiv);
+        containerDiv.appendChild(table);
+    }
+
+    region = regionUtils._regions[regionid];
+    regionUtils.analyzeRegion(region.id);
+        
+    var rpanelbody = HTMLElementUtils.createElement({ kind: "div" });
+
+    const shape = new clipperShape (region.globalPoints.flat(), closed = true, capitalConversion = true, integerConversion = false, removeDuplicates = false)
+    
+    const regionMeasures = {
+        "Area": Math.abs(shape.totalArea()),
+        "Perimeter": shape.totalPerimeter(),
+        "Sub-regions": shape.areas().length,
+        "Bounds": shape.shapeBounds()
+    }
+
+    createMeasureTable(regionMeasures, rpanelbody);
+
+    var div = HTMLElementUtils.createElement({ kind: "div", id: region.id + "_histogram" });
+    var histogram = regionUtils._regions[region.id].barcodeHistogram;
+    var table = div.appendChild(HTMLElementUtils.createElement({
+        kind: "table",
+        extraAttributes: {
+            class: "table table-striped small",
+            style: "overflow-y: auto;max-height:600px;display:block;"
+        }
+    }));
+    thead = HTMLElementUtils.createElement({kind: "thead"});
+    thead.innerHTML = `<tr>
+    <th scope="col">Key</th>
+    <th scope="col">Name</th>
+    <th scope="col">Count</th>
+    </tr>`;
+    tbody = HTMLElementUtils.createElement({kind: "tbody"});
+    table.appendChild(thead);
+    table.appendChild(tbody);
+
+    for (var i in histogram) {
+        var innerHTML = "";
+        innerHTML += "<td>" + histogram[i].key + "</td>";
+        innerHTML += "<td>" + histogram[i].name + "</td>";
+        innerHTML += "<td>" + histogram[i].count + "</td>";
+        tbody.appendChild(HTMLElementUtils.createElement({
+            kind: "tr",
+            "innerHTML": innerHTML
+        }));
+    }
+    rpanelbody.appendChild(div);
+    return rpanelbody.innerHTML;
+}
+
 /** 
  *  regionUtils */
 regionUtils.setMode = function (mode) {
@@ -1619,22 +1781,47 @@ regionUtils.JSONValToRegions= async function(jsonVal){
 // Build data structure for rendering region objects. The basic idea is to
 // divide the image region into scanlines, and bin edges from polygons into
 // those scanlines. Edges within scanlines will be ordered by object IDs.
-regionUtils._generateEdgeListsForDrawing = function(imageBounds, numScanlines = 512) {
-    console.assert(imageBounds.length == 4);
-    const scanlineHeight = imageBounds[3] / numScanlines;
+regionUtils._generateEdgeListsForDrawing = function(numScanlines = 512) {
 
-    regionUtils._edgeLists = [];
-    for (let i = 0; i < numScanlines; ++i) {
-        regionUtils._edgeLists[i] = [[0, 0, 0, 0, 0, 0, 0, 0], 0];
+    // Find which layers that have regions, and create empty edge lists for those
+    regionUtils._edgeListsByLayer = {};
+    for (let regionID of Object.keys(regionUtils._regions)) {
+        const region = regionUtils._regions[regionID];
+        const collectionIndex = region.collectionIndex;
+        console.assert(collectionIndex != undefined);
+
+        if (!(collectionIndex in regionUtils._edgeListsByLayer)) {
+            regionUtils._edgeListsByLayer[collectionIndex] = [];
+            for (let i = 0; i < numScanlines; ++i) {
+                regionUtils._edgeListsByLayer[collectionIndex][i] =
+                    [[0, 0, 0, 0, 0, 0, 0, 0], 0];
+            }
+        }
     }
 
+    // Reset dictionaries for mapping between IDs used when storing the regions
+    // and IDs used during render time
     regionUtils._regionIDToIndex = {};
     regionUtils._regionIndexToID = {};
 
     let objectID = 0;
     for (let regionID of Object.keys(regionUtils._regions)) {
         const region = regionUtils._regions[regionID];
-        regionUtils._regionIDToIndex[regionID] = objectID;  // Update mapping
+        const collectionIndex = region.collectionIndex;
+        console.assert(collectionIndex != undefined);
+        let edgeLists = regionUtils._edgeListsByLayer[collectionIndex];
+
+        const image = tmapp["ISS_viewer"].world.getItemAt(collectionIndex);
+        console.assert(image != undefined);
+        const imageWidth = image.getContentSize().x;
+        const imageHeight = image.getContentSize().y;
+        const imageBounds = [0, 0, imageWidth, imageHeight];
+        const scanlineHeight = imageBounds[3] / numScanlines;
+        // We want to add some overlap to prevent broken horizontal outlines
+        // near scanline boundaries:
+        const overlap = 0.25;
+
+        regionUtils._regionIDToIndex[regionID] = objectID;  // Update ID mappings
         regionUtils._regionIndexToID[objectID] = regionID;  // ...
 
         for (let subregion of region.globalPoints) {
@@ -1664,14 +1851,14 @@ regionUtils._generateEdgeListsForDrawing = function(imageBounds, numScanlines = 
                 // Create header elements for storing information about the number
                 // of edges for path in overlapping scanlines. We also want to store
                 // some other information such as bounding box and parent object ID.
-                const lower = Math.max(Math.floor(yMin / scanlineHeight), 0);
-                const upper = Math.min(Math.floor(yMax / scanlineHeight), numScanlines - 1);
+                const lower = Math.max(Math.floor(yMin / scanlineHeight - overlap), 0);
+                const upper = Math.min(Math.floor(yMax / scanlineHeight + overlap), numScanlines - 1);
                 for (let i = lower; i <= upper; ++i) {
-                    const headerOffset = regionUtils._edgeLists[i][0].length;
-                    regionUtils._edgeLists[i][0].push(xMin, xMax, objectID + 1, 0);
-                    regionUtils._edgeLists[i][1] = headerOffset;
+                    const headerOffset = edgeLists[i][0].length;
+                    edgeLists[i][0].push(xMin, xMax, objectID + 1, 0);
+                    edgeLists[i][1] = headerOffset;
                     for (let j = 0; j < 4; ++j) {
-                        regionUtils._edgeLists[i][0][j] |= mask[j];  // Update occupancy mask
+                        edgeLists[i][0][j] |= mask[j];  // Update occupancy mask
                     }
                 }
 
@@ -1681,12 +1868,12 @@ regionUtils._generateEdgeListsForDrawing = function(imageBounds, numScanlines = 
                     const v1 = points[(i + 1) % numPoints];
                     if (v0.x == v1.x && v0.y == v1.y) { continue; }
 
-                    const lower = Math.max(Math.floor(Math.min(v0.y, v1.y) / scanlineHeight), 0);
-                    const upper = Math.min(Math.floor(Math.max(v0.y, v1.y) / scanlineHeight), numScanlines - 1);
+                    const lower = Math.max(Math.floor(Math.min(v0.y, v1.y) / scanlineHeight - overlap), 0);
+                    const upper = Math.min(Math.floor(Math.max(v0.y, v1.y) / scanlineHeight + overlap), numScanlines - 1);
                     for (let j = lower; j <= upper; ++j) {
-                        const headerOffset = regionUtils._edgeLists[j][1];
-                        regionUtils._edgeLists[j][0].push(v0.x, v0.y, v1.x, v1.y);
-                        regionUtils._edgeLists[j][0][headerOffset + 3] += 1;  // Update edge counter
+                        const headerOffset = edgeLists[j][1];
+                        edgeLists[j][0].push(v0.x, v0.y, v1.x, v1.y);
+                        edgeLists[j][0][headerOffset + 3] += 1;  // Update edge counter
                     }
                 }
             }
@@ -1698,66 +1885,83 @@ regionUtils._generateEdgeListsForDrawing = function(imageBounds, numScanlines = 
 
 // Split each individual edge list around a pivot point into two new lists
 regionUtils._splitEdgeLists = function() {
-    const numScanlines = regionUtils._edgeLists.length;
+    regionUtils._edgeListsByLayerSplit = {};
 
-    regionUtils._edgeListsSplit = [];
-    for (let i = 0; i < numScanlines; ++i) {
-        regionUtils._edgeListsSplit[i] = [[], []];
-    }
+    for (let collectionIndex in regionUtils._edgeListsByLayer) {
+        const edgeLists = regionUtils._edgeListsByLayer[collectionIndex];
+        const numScanlines = edgeLists.length;
 
-    for (let i = 0; i < numScanlines; ++i) {
-        const edgeList = regionUtils._edgeLists[i][0];
-        const numItems = edgeList.length / 4;
-
-        // Find pivot point (mean center of all bounding boxes) for left-right split
-        let accum = [0.0, 0.0];
-        for (let j = 2; j < numItems; ++j) {
-            const xMin = edgeList[j * 4 + 0];
-            const xMax = edgeList[j * 4 + 1];
-            const edgeCount = edgeList[j * 4 + 3];
-
-            accum[0] += (xMin + xMax) * 0.5; accum[1] += 1;
-            j += edgeCount;  // Position pointer before next bounding box
-        }
-        const pivot = accum[0] / Math.max(1, accum[1]);
-
-        // Copy occupancy mask, and also store the pivot point
-        for (let n = 0; n < 2; ++n) {
-            regionUtils._edgeListsSplit[i][n].push(...edgeList.slice(0, 4));
-            regionUtils._edgeListsSplit[i][n].push(pivot, 0, 0, 0);
+        regionUtils._edgeListsByLayerSplit[collectionIndex] = [];
+        for (let i = 0; i < numScanlines; ++i) {
+            regionUtils._edgeListsByLayerSplit[collectionIndex][i] =
+                [[], []];
         }
 
-        // Do left-right split of edge data
-        for (let j = 2; j < numItems; ++j) {
-            const xMin = edgeList[j * 4 + 0];
-            const xMax = edgeList[j * 4 + 1];
-            const edgeCount = edgeList[j * 4 + 3];
+        let edgeListsSplit = regionUtils._edgeListsByLayerSplit[collectionIndex];
+        for (let i = 0; i < numScanlines; ++i) {
+            const edgeList = edgeLists[i][0];
+            const numItems = edgeList.length / 4;
 
-            if (xMin < pivot) {
-                regionUtils._edgeListsSplit[i][0].push(
-                    ...edgeList.slice(j * 4, (j + edgeCount + 1) * 4));
+            // Find pivot point (mean center of all bounding boxes) for left-right split
+            let accum = [0.0, 0.0];
+            for (let j = 2; j < numItems; ++j) {
+                const xMin = edgeList[j * 4 + 0];
+                const xMax = edgeList[j * 4 + 1];
+                const edgeCount = edgeList[j * 4 + 3];
+
+                accum[0] += (xMin + xMax) * 0.5; accum[1] += 1;
+                j += edgeCount;  // Position pointer before next bounding box
             }
-            if (xMax > pivot) {
-                regionUtils._edgeListsSplit[i][1].push(
-                    ...edgeList.slice(j * 4, (j + edgeCount + 1) * 4));
+            const pivot = accum[0] / Math.max(1, accum[1]);
+
+            // Copy occupancy mask, and also store the pivot point
+            for (let n = 0; n < 2; ++n) {
+                edgeListsSplit[i][n].push(...edgeList.slice(0, 4));
+                edgeListsSplit[i][n].push(pivot, 0, 0, 0);
             }
-            j += edgeCount;  // Position pointer before next bounding box
+
+            // Do left-right split of edge data
+            for (let j = 2; j < numItems; ++j) {
+                const xMin = edgeList[j * 4 + 0];
+                const xMax = edgeList[j * 4 + 1];
+                const edgeCount = edgeList[j * 4 + 3];
+
+                if (xMin < pivot) {
+                    edgeListsSplit[i][0].push(
+                        ...edgeList.slice(j * 4, (j + edgeCount + 1) * 4));
+                }
+                if (xMax > pivot) {
+                    edgeListsSplit[i][1].push(
+                        ...edgeList.slice(j * 4, (j + edgeCount + 1) * 4));
+                }
+                j += edgeCount;  // Position pointer before next bounding box
+            }
         }
     }
 }
 
 
 // Add cluster information to edge lists (WIP)
-regionUtils._addClustersToEdgeLists = function(imageBounds) {
+regionUtils._addClustersToEdgeLists = function() {
     // STUB
 }
 
 
 // Check if point is inside or outside a region, by computing the winding
 // number for paths in a scanline of the edge list data structure
-regionUtils._pointInRegion = function(px, py, regionID, imageBounds) {
-    console.assert(imageBounds.length == 4);
-    const numScanlines = regionUtils._edgeLists.length;
+regionUtils._pointInRegion = function(px, py, regionID) {
+    if (!(regionID in regionUtils._regions)) return false;
+
+    const region = regionUtils._regions[regionID];
+    const collectionIndex = region.collectionIndex;
+    const edgeLists = regionUtils._edgeListsByLayer[collectionIndex];
+    const numScanlines = edgeLists.length;
+
+    const image = tmapp["ISS_viewer"].world.getItemAt(collectionIndex);
+    console.assert(image != undefined);
+    const imageWidth = image.getContentSize().x;
+    const imageHeight = image.getContentSize().y;
+    const imageBounds = [0, 0, imageWidth, imageHeight];
     const scanlineHeight = imageBounds[3] / numScanlines;
     const scanline = Math.floor(py / scanlineHeight);
 
@@ -1765,7 +1969,7 @@ regionUtils._pointInRegion = function(px, py, regionID, imageBounds) {
 
     let isInside = false;
     if (scanline >= 0 && scanline < numScanlines) {
-        const edgeList = regionUtils._edgeLists[scanline][0];
+        const edgeList = edgeLists[scanline][0];
         const numItems = edgeList.length / 4;
 
         // Traverse edge list until we find first path for object ID
@@ -1802,54 +2006,72 @@ regionUtils._pointInRegion = function(px, py, regionID, imageBounds) {
 }
 
 
-// Find region under point. Returns a key to the regionUtils_regions dict if a
-// region is found, otherwise null. If multiple regions overlap at the point,
-// the key of the last one in the draw order shall be returned.
-regionUtils._findRegionByPoint = function(px, py, imageBounds) {
-    console.assert(imageBounds.length == 4);
-    const numScanlines = regionUtils._edgeLists.length;
-    const scanlineHeight = imageBounds[3] / numScanlines;
-    const scanline = Math.floor(py / scanlineHeight);
-
-    if (scanline < 0 || scanline >= numScanlines) return null;  // Outside image
-    const edgeList = regionUtils._edgeLists[scanline][0];
-    const numItems = edgeList.length / 4;
-
-    let offset = 2;  // Offset starts at two because of occupancy mask
-    let objectID = offset < numItems ? (edgeList[offset * 4 + 2] - 1) : -1;
+// Find region under point specified in OSD viewer coordinates. Returns a key to
+// the regionUtils_regions dict if a region is found, otherwise null. If
+// multiple regions overlap at the point, the key of the last one in the draw
+// order shall be returned.
+regionUtils._findRegionByPoint = function(position) {
+    // This function currently loops over all image layers to find any region
+    // containing the point. At some point, we might also want to add
+    // collectionIndex as an optional input, to restrict the search to a
+    // particular image layer.
 
     let foundRegion = -1;
-    while (offset < numItems) {
-        console.assert(regionUtils._regionToColorLUT.length > (objectID * 4));
-        const visible = regionUtils._regionToColorLUT[objectID * 4 + 3];
+    for (let collectionIndex in regionUtils._edgeListsByLayer) {
+        const edgeLists = regionUtils._edgeListsByLayer[collectionIndex];
+        const numScanlines = edgeLists.length;
 
-        // (TODO Add bounding box test to check if object can be skipped)
+        const image = tmapp["ISS_viewer"].world.getItemAt(collectionIndex);
+        console.assert(image != undefined);
+        const imageWidth = image.getContentSize().x;
+        const imageHeight = image.getContentSize().y;
+        const imageBounds = [0, 0, imageWidth, imageHeight];
+        const scanlineHeight = imageBounds[3] / numScanlines;
 
-        // Compute winding number from all edges stored for the object ID
-        let windingNumber = 0;
-        while (offset < numItems && (edgeList[offset * 4 + 2] - 1) == objectID) {
-            const count = edgeList[offset * 4 + 3];
-            for (let i = 0; i < count; ++i) {
-                const x0 = edgeList[(offset + 1 + i) * 4 + 0];
-                const y0 = edgeList[(offset + 1 + i) * 4 + 1];
-                const x1 = edgeList[(offset + 1 + i) * 4 + 2];
-                const y1 = edgeList[(offset + 1 + i) * 4 + 3];
+        const imageCoord = image.viewerElementToImageCoordinates(position);
+        const px = imageCoord.x;
+        const py = imageCoord.y;
+        const scanline = Math.floor(py / scanlineHeight);
 
-                if (Math.min(y0, y1) <= py && py < Math.max(y0, y1)) {
-                    const t = (py - y0) / (y1 - y0 + 1e-5);
-                    const x = x0 + (x1 - x0) * t;
-                    const weight = Math.sign(y1 - y0);
-                    windingNumber += ((x - px) > 0.0 ? weight : 0);
+        if (scanline < 0 || scanline >= numScanlines) continue;  // Outside image
+        const edgeList = edgeLists[scanline][0];
+        const numItems = edgeList.length / 4;
+
+        let offset = 2;  // Offset starts at two because of occupancy mask
+        let objectID = offset < numItems ? (edgeList[offset * 4 + 2] - 1) : -1;
+
+        while (offset < numItems) {
+            console.assert(regionUtils._regionToColorLUT.length > (objectID * 4));
+            const visible = regionUtils._regionToColorLUT[objectID * 4 + 3];
+
+            // (TODO Add bounding box test to check if object can be skipped)
+
+            // Compute winding number from all edges stored for the object ID
+            let windingNumber = 0;
+            while (offset < numItems && (edgeList[offset * 4 + 2] - 1) == objectID) {
+                const count = edgeList[offset * 4 + 3];
+                for (let i = 0; i < count; ++i) {
+                    const x0 = edgeList[(offset + 1 + i) * 4 + 0];
+                    const y0 = edgeList[(offset + 1 + i) * 4 + 1];
+                    const x1 = edgeList[(offset + 1 + i) * 4 + 2];
+                    const y1 = edgeList[(offset + 1 + i) * 4 + 3];
+
+                    if (Math.min(y0, y1) <= py && py < Math.max(y0, y1)) {
+                        const t = (py - y0) / (y1 - y0 + 1e-5);
+                        const x = x0 + (x1 - x0) * t;
+                        const weight = Math.sign(y1 - y0);
+                        windingNumber += ((x - px) > 0.0 ? weight : 0);
+                    }
                 }
+                offset += count + 1;  // Position pointer at next path
             }
-            offset += count + 1;  // Position pointer at next path
+
+            // Apply non-zero fill rule for inside test
+            const isInside = windingNumber != 0;
+            if (isInside && visible) { foundRegion = objectID; }
+
+            objectID = offset < numItems ? (edgeList[offset * 4 + 2] - 1) : -1;
         }
-
-        // Apply non-zero fill rule for inside test
-        const isInside = windingNumber != 0;
-        if (isInside && visible) { foundRegion = objectID; }
-
-        objectID = offset < numItems ? (edgeList[offset * 4 + 2] - 1) : -1;
     }
     return foundRegion >= 0 ? regionUtils._regionIndexToID[foundRegion] : null;
 }
