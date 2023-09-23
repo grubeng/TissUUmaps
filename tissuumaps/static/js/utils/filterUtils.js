@@ -315,8 +315,8 @@ function RESCALE(vmin,vmax) {
             var precomputedContrast = [];
             for (var i = 0; i < 256; i++) {
                 var val = (i - vmin)/range;
-                if (val<0){val=0};
-                if (val>255){val=255};
+                if (val<0){val=0}
+                if (val>255){val=255}
                 precomputedContrast[i] = val
             }
             return function(context, callback) {
@@ -428,7 +428,7 @@ Caman.Filter.register("splitChannel", function (channelValue) {
             {text:"luminosity", value:"luminosity"}
         ]
     }
-    var label = document.createElement("label");
+    label = document.createElement("label");
     label.innerHTML = "Merging mode:&nbsp;";
     settingsPanel.appendChild(label);
     let select = HTMLElementUtils.selectTypeDropDown(modeParams);
@@ -550,13 +550,14 @@ filterUtils.getFilterItems = function() {
     overlayUtils.waitLayersReady().then(() => {    
         let filterInputsRanges = document.getElementsByClassName("filterInput");
         let items = {};
+        let filterLayer;
         for (let i = 0; i < filterInputsRanges.length; i++) {
-            var filterLayer = filterInputsRanges[i].getAttribute("layer");
+            filterLayer = filterInputsRanges[i].getAttribute("layer");
             items[filterLayer] = []
         }
         for (let i = 0; i < filterInputsRanges.length; i++) {
             var filterName = filterInputsRanges[i].getAttribute("filter");
-            var filterLayer = filterInputsRanges[i].getAttribute("layer");
+            filterLayer = filterInputsRanges[i].getAttribute("layer");
             var filterFunction = filterUtils.getFilterFunction(filterName);
             let inputValue;
             if (filterInputsRanges[i].type == "range" || filterInputsRanges[i].type == "select-one")
