@@ -115,7 +115,7 @@ dataUtils.processRawData = function(data_id, rawdata) {
             data_obj["_processeddata"][rawdata.columns[i]] = new Float64Array(numRows);
 
             let offset = 0;
-            for (chunk of rawdata.data[i]) {
+            for (let chunk of rawdata.data[i]) {
                 data_obj["_processeddata"][rawdata.columns[i]].set(chunk, offset);
                 offset += chunk.length;
             }

@@ -2287,9 +2287,9 @@ interfaceUtils.loadingModal = function(text, title) {
     if (!title) title = "Loading";
     if (!text) text = "Please wait...";
     var modalUID = "loading"
-    
-    buttons=divpane=HTMLElementUtils.createElement({"kind":"div"});
-    content=HTMLElementUtils.createElement({"kind":"p", "extraAttributes":{"class":""}});
+    let divpane;
+    let buttons=divpane=HTMLElementUtils.createElement({"kind":"div"});
+    let content=HTMLElementUtils.createElement({"kind":"p", "extraAttributes":{"class":""}});
     content.innerHTML = text;
     return interfaceUtils.generateModal(title, content, buttons, modalUID, true);
 }
