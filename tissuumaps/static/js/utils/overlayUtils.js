@@ -395,10 +395,10 @@ overlayUtils.addLayerSettings = function(layerName, tileSource, layerIndex, chec
         elt.appendChild(channelRange);
         function changeFun(ev) {
             var slider = $(channelRange)[0];
-            channel = slider.value;
+            let channel = slider.value;
             $(".visible-layers").prop("checked",true);$(".visible-layers").click();$("#visible-layer-"+(channel- -1)).click();
-            channelName = tmapp.layers[channel- -1].name
-            channelId = channelName.replace(".dzi","");
+            let channelName = tmapp.layers[channel- -1].name
+            let channelId = channelName.replace(".dzi","");
             document.getElementById("channelValue").innerHTML = "Channel " + (channel - -2) + ": " + channelName;
             if (overlayUtils._linkMarkersToChannels) {
                 $(".uniquetab-marker-input").prop("checked",false);
@@ -463,7 +463,7 @@ overlayUtils.addLayerFromSelect = function() {
         tileSource: tileSource
     }
     tmapp.layers.push(layer);
-    i = tmapp.layers.length - 1;
+    let i = tmapp.layers.length - 1;
     overlayUtils.addLayer(layer, i);
     overlayUtils.addAllLayersSettings();
 }
