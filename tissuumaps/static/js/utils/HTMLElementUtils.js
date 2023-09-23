@@ -11,12 +11,13 @@ const HTMLElementUtils = {}
 
 /** Create a checkbox input  */
 HTMLElementUtils.inputTypeCheckbox = function (params) {
+    let checkbox;
     if (!params) {
-        var checkbox = document.createElement("input");
+        checkbox = document.createElement("input");
         checkbox.setAttribute("type", "checkbox");
         return checkbox;
     }
-    var checkbox = document.createElement("input");
+    checkbox = document.createElement("input");
     checkbox.setAttribute("type", "checkbox");
     (params.id || null ? checkbox.setAttribute("id", params.id) : null);
     (params["class"] || null ? checkbox.setAttribute("class", params["class"]) : null);
@@ -38,12 +39,13 @@ HTMLElementUtils.inputTypeCheckbox = function (params) {
 
 /** Create a number input  */
 HTMLElementUtils.inputTypeNumber = function (params) {
+    let numberInput;
     if (!params) {
-        var numberInput = document.createElement("input");
+        numberInput = document.createElement("input");
         numberInput.type = "number";
         return numberInput
     }
-    var numberInput = document.createElement("input");
+    numberInput = document.createElement("input");
     numberInput.type = "number";
     (params.id || null ? numberInput.setAttribute("id", params.id) : null);
     (params["class"] || null ? numberInput.setAttribute("class", params["class"]) : null);
@@ -66,12 +68,13 @@ HTMLElementUtils.inputTypeNumber = function (params) {
 
 /** Create a color input  */
 HTMLElementUtils.inputTypeColor = function (params) {
+    let color;
     if (!params) {
-        var color = document.createElement("input");
+        color = document.createElement("input");
         color.setAttribute("type", "color");
         return color;
     }
-    var color = document.createElement("input");
+    color = document.createElement("input");
     color.setAttribute("type", "color");
     (params.id || null ? color.setAttribute("id", params.id) : null);
     (params["class"] || null ? color.setAttribute("class", params["class"]) : null);
@@ -92,12 +95,13 @@ HTMLElementUtils.inputTypeColor = function (params) {
 
 /** Create a text input  */
 HTMLElementUtils.inputTypeText = function (params) {
+    let text;
     if (!params) {
-        var text = document.createElement("input");
+        text = document.createElement("input");
         text.setAttribute("type", "text");
         return text;
     }
-    var text = document.createElement("input");
+    text = document.createElement("input");
     text.setAttribute("type", "text");
     (params.id || null ? text.setAttribute("id", params.id) : null);
     (params["class"] || null ? text.setAttribute("class", params["class"]) : null);
@@ -112,12 +116,13 @@ HTMLElementUtils.inputTypeText = function (params) {
 
 /** Create a range input  */
 HTMLElementUtils.inputTypeRange = function (params) {
+    let rangeInput;
     if (!params) {
-        var rangeInput = document.createElement("input");
+        rangeInput = document.createElement("input");
         rangeInput.type = "range";
         return rangeInput
     }
-    var rangeInput = document.createElement("input");
+    rangeInput = document.createElement("input");
     rangeInput.type = "range";
     (params.id || null ? rangeInput.setAttribute("id", params.id) : null);
     (params["class"] || null ? rangeInput.setAttribute("class", params["class"]) : null);
@@ -196,14 +201,16 @@ HTMLElementUtils.createElement = function (params) {
 
 /** Create a booststrap panel */
 HTMLElementUtils.createPanel = function (params) {
+    let panelClass;
+    let panel;
     if (!params) {
-        var panelClass = "panel-default";
-        var panel = document.createElement("div");
+        panelClass = "panel-default";
+        panel = document.createElement("div");
         panel.setAttribute("class", "panel " + panelClass);
         return panel;
     }
-    var panelClass = params.panelClass || "panel-default";
-    var panel = document.createElement("div");
+    panelClass = params.panelClass || "panel-default";
+    panel = document.createElement("div");
     panel.setAttribute("class", "panel " + panelClass);
     (params.id || null ? panel.setAttribute("id", params.id) : null);
 
@@ -220,12 +227,13 @@ HTMLElementUtils.createPanel = function (params) {
 
 /** Create a booststrap row */
 HTMLElementUtils.createRow = function (params) {
+    let row;
     if (!params) {
-        var row = HTMLElementUtils.createElement({ kind: "div" });
+        row = HTMLElementUtils.createElement({ kind: "div" });
         row.setAttribute("class", "row py-1");
         return row;
     }
-    var row = HTMLElementUtils.createElement({ kind: "div" });
+    row = HTMLElementUtils.createElement({ kind: "div" });
     (params.id || null ? row.setAttribute("id", params.id) : null);
     row.setAttribute("class", "row py-1");
     if (params.divisions) {
@@ -234,8 +242,8 @@ HTMLElementUtils.createRow = function (params) {
         });
     }
     if (params.extraAttributes) {
-        for (var attr in extraAttributes) {
-            row.setAttribute(attr, extraAttributes[attr]);
+        for (var attr in params.extraAttributes) {
+            row.setAttribute(attr, params.extraAttributes[attr]);
         }
     }
     return row;
@@ -244,14 +252,16 @@ HTMLElementUtils.createRow = function (params) {
 
 /** Create a booststrap column */ 
 HTMLElementUtils.createColumn = function (params) {
+    let width;
+    let column;
     if (!params) {
-        var width = 2;
-        var column = HTMLElementUtils.createElement({ kind: "div" });
+        width = 2;
+        column = HTMLElementUtils.createElement({ kind: "div" });
         column.setAttribute("class", "col-xs-" + width + " col-sm-" + width + " col-md-" + width + " col-lg-" + width);
         return column;
     }
-    var width = (params.width || null ? params.width : 2);
-    var column = HTMLElementUtils.createElement({ kind: "div" });
+    width = (params.width || null ? params.width : 2);
+    column = HTMLElementUtils.createElement({ kind: "div" });
     (params.id || null ? column.setAttribute("id", params.id) : null);
     if (width == 0) {
         column.setAttribute("class", "col");
@@ -271,12 +281,13 @@ HTMLElementUtils.createColumn = function (params) {
 
 /** Create a button */
 HTMLElementUtils.createButton = function (params) {
+    let button;
     if (!params) {
-        var button = document.createElement("button");
+        button = document.createElement("button");
         button.innerHTML = "unnamed";
         return button;
     }
-    var button = document.createElement("button");
+    button = document.createElement("button");
     (params.id || null ? button.setAttribute("id", params.id) : null);
     (params.innerText || null ? button.innerHTML = params.innerText : null);
     (params["class"] || null ? button.setAttribute("class", params["class"]) : null);
@@ -314,11 +325,12 @@ HTMLElementUtils.createTable = function (params) {
 
 /** Create a form */
 HTMLElementUtils.createForm = function (params) {
+    let form; 
     if (!params) {
-        var form = document.createElement("form");
+        form = document.createElement("form");
         return form;
     }
-    var form = document.createElement("form");
+    form = document.createElement("form");
     if (params.extraAttributes) {
         for (var attr in params.extraAttributes) {
             form.setAttribute(attr, params.extraAttributes[attr]);
