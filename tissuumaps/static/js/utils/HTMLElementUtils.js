@@ -339,10 +339,10 @@ HTMLElementUtils.determinsticHTMLColor = function (key) {
     
     var maincolor = key.charAt(0).toLowerCase();
 
-    ggroup = ['g', 'i', 's', 'd', 'w', 'z','1','5','9'];
-    agroup = ['a', 'e', 'o', 'l', 'p', 'b', 'k', 'j','2','6'];
-    cgroup = ['c', 'm', 'f', 'v','3','7','q'];
-    tugroup = ['t', 'r', 'n', 'u', 'h', 'y', 'x','4','8','0' ];
+    let ggroup = ['g', 'i', 's', 'd', 'w', 'z','1','5','9'];
+    let agroup = ['a', 'e', 'o', 'l', 'p', 'b', 'k', 'j','2','6'];
+    let cgroup = ['c', 'm', 'f', 'v','3','7','q'];
+    let tugroup = ['t', 'r', 'n', 'u', 'h', 'y', 'x','4','8','0' ];
 
     if (ggroup.includes(maincolor)) { U = 0; V = 0; } 
     else if (tugroup.includes(maincolor)) { U = 0; V = 255; }

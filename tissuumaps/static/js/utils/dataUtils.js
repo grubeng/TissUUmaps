@@ -405,7 +405,7 @@ dataUtils.getAllH5Data = async function(data_id, alldrops){
         //print a menu in the interface for the groups
         let table=await interfaceUtils._mGenUIFuncs.groupUI(data_id);
         if (table == null) return;
-        menuui=interfaceUtils.getElementById(data_id+"_menu-UI");
+        let menuui=interfaceUtils.getElementById(data_id+"_menu-UI");
         menuui.classList.remove("d-none")
         menuui.innerText="";
 
@@ -739,12 +739,13 @@ dataUtils.makeQuadTrees = function(data_id) {
         return markerData[yselector][d] * coordFactor;
     };
     if (dataUtils._quadtreesEnabled) console.time("Generate quadtrees");
+    let treeKey;
     if (groupByCol) {
         var allgroups = d3.nest().key(function (d) { return markerData[groupByCol][d]; }).entries(indexData);
 
         data_obj["_groupgarden"] = {};
         for (var i = 0; i < allgroups.length; i++) {
-            const treeKey = allgroups[i].key;
+            treeKey = allgroups[i].key;
             if (dataUtils._quadtreesEnabled) {
                 allgroups[i].values = new Uint32Array(allgroups[i].values);
                 if (dataUtils._quadtreesMethod == 0) {

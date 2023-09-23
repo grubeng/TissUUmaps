@@ -102,9 +102,9 @@ projectUtils.getActiveProject = function () {
 
 /**
  * This method is used to load the TissUUmaps state (gene expression, cell morphology, regions) */
- projectUtils.makeButtonFromTab = function(dataset, title, modalUID) {
+ projectUtils.makeButtonFromTab = function(dataset, title, modalUID, generated) {
     return new Promise((resolve, reject) => {
-        csvFile = document.getElementById(dataset + "_csv").value.replace(/^.*[\\\/]/, '');
+        let csvFile = document.getElementById(dataset + "_csv").value.replace(/^.*[\\\/]/, '');
         if (!csvFile) {
             if (dataUtils.data[dataset]) {
                 csvFile = dataUtils.data[dataset]["_csv_path"];
@@ -117,12 +117,13 @@ projectUtils.getActiveProject = function () {
                 resolve();
             }
         }
+        let divpane;
         if (modalUID === undefined) modalUID = "default";
-        button1=HTMLElementUtils.createButton({"id":generated+"_marker-tab-button","extraAttributes":{ "class":"btn btn-secondary mx-2", "data-bs-dismiss":"modal"}})
+        let button1=HTMLElementUtils.createButton({"id":generated+"_marker-tab-button","extraAttributes":{ "class":"btn btn-secondary mx-2", "data-bs-dismiss":"modal"}})
         button1.innerText = "Cancel";
-        button2=HTMLElementUtils.createButton({"id":generated+"_marker-tab-button","extraAttributes":{ "class":"btn btn-primary mx-2"}})
+        let button2=HTMLElementUtils.createButton({"id":generated+"_marker-tab-button","extraAttributes":{ "class":"btn btn-primary mx-2"}})
         button2.innerText = "Generate button";
-        buttons=divpane=HTMLElementUtils.createElement({"kind":"div"});
+        let buttons=divpane=HTMLElementUtils.createElement({"kind":"div"});
         buttons.appendChild(button1);
         buttons.appendChild(button2);
 
@@ -144,8 +145,9 @@ projectUtils.getActiveProject = function () {
                 http.send();
                 return http.status!=404;
             }
-            path = document.getElementById("generateButtonPath_" + modalUID).value
+            let path = document.getElementById("generateButtonPath_" + modalUID).value
             if (path.includes("[")) {path = JSON.parse(path)}
+            let _exists;
             if( Object.prototype.toString.call( path ) === '[object Array]' ) {
                 _exists = path.every(UrlExists);
             }
@@ -173,26 +175,26 @@ projectUtils.getActiveProject = function () {
             }
         })
         
-        content=HTMLElementUtils.createElement({"kind":"div"});
-            row0=HTMLElementUtils.createElement({"kind":"p", "extraAttributes":{"class":"text-danger"}});
+        let content=HTMLElementUtils.createElement({"kind":"div"});
+            let row0=HTMLElementUtils.createElement({"kind":"p", "extraAttributes":{"class":"text-danger"}});
             row0.innerText = "Warning, the csv file must be in the same folder as the saved project or as the images."
-            row1=HTMLElementUtils.createRow({});
-                col11=HTMLElementUtils.createColumn({"width":12});
-                    label111=HTMLElementUtils.createElement({"kind":"label", "extraAttributes":{ "for":"generateButtonPath_" + modalUID }});
+            let row1=HTMLElementUtils.createRow({});
+                let col11=HTMLElementUtils.createColumn({"width":12});
+                    let label111=HTMLElementUtils.createElement({"kind":"label", "extraAttributes":{ "for":"generateButtonPath_" + modalUID }});
                     label111.innerText="Relative path to the csv file (on the server side)"
-                    file112=HTMLElementUtils.createElement({"kind":"input", "id":"generateButtonPath_" + modalUID, "extraAttributes":{ "class":"form-text-input form-control", "type":"text", "value":csvFile}});
+                    let file112=HTMLElementUtils.createElement({"kind":"input", "id":"generateButtonPath_" + modalUID, "extraAttributes":{ "class":"form-text-input form-control", "type":"text", "value":csvFile}});
 
-            row2=HTMLElementUtils.createRow({});
-                col21=HTMLElementUtils.createColumn({"width":12});
-                    label211=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"for":"generateButtonTitle_" + modalUID }});
+            let row2=HTMLElementUtils.createRow({});
+                let col21=HTMLElementUtils.createColumn({"width":12});
+                    let label211=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"for":"generateButtonTitle_" + modalUID }});
                     label211.innerText="Button inner text";
-                    select212=HTMLElementUtils.createElement({"kind":"input", "id":"generateButtonTitle_" + modalUID, "extraAttributes":{ "class":"form-text-input form-control", "type":"text", "value":"Download data"} });
+                    let select212=HTMLElementUtils.createElement({"kind":"input", "id":"generateButtonTitle_" + modalUID, "extraAttributes":{ "class":"form-text-input form-control", "type":"text", "value":"Download data"} });
 
-            row3=HTMLElementUtils.createRow({});
-            col31=HTMLElementUtils.createColumn({"width":12});
-                label311=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"for":"generateButtonComment_" + modalUID }});
+            let row3=HTMLElementUtils.createRow({});
+            let col31=HTMLElementUtils.createColumn({"width":12});
+                let label311=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"for":"generateButtonComment_" + modalUID }});
                 label311.innerText="Comment (will be displayed on the right of the button)";
-                select312=HTMLElementUtils.createElement({"kind":"input", "id":"generateButtonComment_" + modalUID, "extraAttributes":{ "class":"form-text-input form-control", "type":"text", "value":""} });
+                let select312=HTMLElementUtils.createElement({"kind":"input", "id":"generateButtonComment_" + modalUID, "extraAttributes":{ "class":"form-text-input form-control", "type":"text", "value":""} });
         
         content.appendChild(row0);
         content.appendChild(row1);
@@ -259,7 +261,7 @@ projectUtils.makeButtonFromTabAux = function (dataset, csvFile, title, comment, 
         projectUtils.removeTabFromProject(dataset);
     }
 
-    markerFile = {
+    let markerFile = {
         "path": csvFile,
         "comment":comment,
         "title":title,
@@ -267,11 +269,11 @@ projectUtils.makeButtonFromTabAux = function (dataset, csvFile, title, comment, 
         "autoLoad":autoLoad,
         "uid":dataset
     };
-    tabName = document.getElementById(dataset + "_tab-name").value;
+    let tabName = document.getElementById(dataset + "_tab-name").value;
     markerFile.name = tabName;
-    headers = interfaceUtils._mGenUIFuncs.getTabDropDowns(dataset);
+    let headers = interfaceUtils._mGenUIFuncs.getTabDropDowns(dataset);
     markerFile.expectedHeader = Object.assign({}, ...Object.keys(headers).map((k) => ({[k]: headers[k].value})));
-    radios = interfaceUtils._mGenUIFuncs.getTabRadiosAndChecks(dataset);
+    let radios = interfaceUtils._mGenUIFuncs.getTabRadiosAndChecks(dataset);
     markerFile.expectedRadios = Object.assign({}, ...Object.keys(radios).map((k) => ({[k]: radios[k].checked})));
     if (!projectUtils._activeState.markerFiles) {
         projectUtils._activeState.markerFiles = [];

@@ -23,7 +23,7 @@ markerUtils.updatePiechartLegend = function() {
         elt.id = "piechartLegend"
         tmapp['ISS_viewer'].addControl(elt,{anchor: OpenSeadragon.ControlAnchor.TOP_LEFT});
     }
-    elt = document.getElementById("piechartLegend");
+    let elt = document.getElementById("piechartLegend");
     elt.style.display="block";
     elt.innerHTML = "";
     elt.classList.add("d-none");

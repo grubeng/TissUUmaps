@@ -875,14 +875,14 @@ glUtils.loadMarkers = function(uid, forceUpdate) {
     const POINT_OFFSET = numPoints * 0,
           INDEX_OFFSET = numPoints * 0,
           SCALE_OFFSET = numPoints * 4,
-          SHAPE_OFFSET = numPoints * 8;
-          OPACITY_OFFSET = numPoints * 12;
+          SHAPE_OFFSET = numPoints * 8,
+          OPACITY_OFFSET = numPoints * 12,
           TRANSFORM_OFFSET = numPoints * 14;
     const POINT_LOCATION = 0,
           INDEX_LOCATION = 1,
           SCALE_LOCATION = 2,
           SHAPE_LOCATION = 3,
-          OPACITY_LOCATION = 4;
+          OPACITY_LOCATION = 4,
           TRANSFORM_LOCATION = 5;
 
     const lastInputs = glUtils._markerInputsCached[uid];
@@ -1259,7 +1259,7 @@ glUtils._loadEdges = function(uid, forceUpdate) {
           TRANSFORM_OFFSET = numEdges * 22;
     const POINT_LOCATION = 0,      // Re-use the same attribute locations that
           INDEX_LOCATION = 1,      // are used also for drawing the markers
-          OPACITY_LOCATION = 4;
+          OPACITY_LOCATION = 4,
           TRANSFORM_LOCATION = 5;
 
     const lastInputs = glUtils._edgeInputsCached[uid];

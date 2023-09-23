@@ -805,7 +805,7 @@ interfaceUtils._mGenUIFuncs.ActivateTab=function(uid){
  */
 interfaceUtils._mGenUIFuncs.getTabDropDowns = function(uid, only_csvColumns){
     if (only_csvColumns === undefined) only_csvColumns = false;
-    allinputs={}
+    let allinputs={}
     allinputs["X"]=interfaceUtils.getElementById(uid+"_x-value");
     allinputs["Y"]=interfaceUtils.getElementById(uid+"_y-value");
 
@@ -844,7 +844,7 @@ interfaceUtils._mGenUIFuncs.getTabDropDowns = function(uid, only_csvColumns){
  * @returns {Object} allinputs
  */
 interfaceUtils._mGenUIFuncs.getTabRadiosAndChecks= function(uid){
-    allradios={}
+    let allradios={}
 
     allradios["cb_col"]=interfaceUtils.getElementById(uid+"_cb-bypoint");
     allradios["cb_gr"]=interfaceUtils.getElementById(uid+"_cb-bygroup");
@@ -1778,7 +1778,8 @@ interfaceUtils._mGenUIFuncs.generateAccordionItem2=function(){
     let generated=interfaceUtils._mGenUIFuncs.ctx.aUUID;
 
     var generateButton = function (event) {
-        return projectUtils.makeButtonFromTab(event.target.id.split("_")[0]);
+        console.log("GENERATING BUTTON", console.log(event.target.id.split("_")[0]))
+        return projectUtils.makeButtonFromTab(event.target.id.split("_")[0], undefined, undefined, generated);
     } 
     //row 0
     let row0=HTMLElementUtils.createRow({id:generated+"_opacity_0"});
@@ -2078,7 +2079,7 @@ interfaceUtils._mGenUIFuncs.groupUI=async function(uid, force){
             td2 = HTMLElementUtils.createElement({"kind":"td"});
             var shapeoptions=[];
             markerUtils._symbolStrings.forEach((sho,index)=>{ shapeoptions.push({"text":markerUtils._symbolUnicodes[index],"value":sho}) })
-            shapeinput2=HTMLElementUtils.selectTypeDropDown({ "id":uid+"_"+escapedID+"_shape","class":"form-select form-select-sm "+uid+"-marker-shape","options":shapeoptions,"extraAttributes":{"aria-label":".form-select-sm"}})
+            let shapeinput2=HTMLElementUtils.selectTypeDropDown({ "id":uid+"_"+escapedID+"_shape","class":"form-select form-select-sm "+uid+"-marker-shape","options":shapeoptions,"extraAttributes":{"aria-label":".form-select-sm"}})
             if(_selectedOptions["shape_fixed"]){
                 shapeinput2.value=_selectedDropDown["shape_fixed"].value;
             }else if(_selectedOptions["shape_gr_rand"]){
@@ -2111,6 +2112,7 @@ interfaceUtils._mGenUIFuncs.groupUI=async function(uid, force){
         }
         if(!data_obj["_cb_col"] && !data_obj["_pie_col"]){
             td3 = HTMLElementUtils.createElement({"kind":"td"});
+            let thecolor;
             //the color depends on 3 possibilities , "cb_gr_rand","cb_gr_gene","cb_gr_name"
             if(_selectedOptions["cb_gr_rand"]){
                 thecolor=overlayUtils.randomColor("hex");
@@ -2148,7 +2150,7 @@ interfaceUtils._mGenUIFuncs.groupUI=async function(uid, force){
         }
 
         
-        button1 = HTMLElementUtils.createElement({"kind":"div", extraAttributes:{"data-uid":uid,"data-escapedID":escapedID, "class":"btn btn-light btn-sm mx-1"}});
+        let button1 = HTMLElementUtils.createElement({"kind":"div", extraAttributes:{"data-uid":uid,"data-escapedID":escapedID, "class":"btn btn-light btn-sm mx-1"}});
         button1.innerHTML = "<i class='bi bi-eye'></i>";
         button1.checkVisible = check0;
         button1.checkHidden = check1;
@@ -2156,13 +2158,14 @@ interfaceUtils._mGenUIFuncs.groupUI=async function(uid, force){
         button1.lastCheckedState = check0.checked;
         td4.appendChild(button1);
         tr.appendChild(td4);
+        let eventnames;
                
         eventnames = ["mouseenter"];
         eventnames.forEach(function(eventname) {
             button1.addEventListener("mouseenter",function(event) {
                 tr = this.parentElement.parentElement;
                 tr.classList.add("table-primary");
-                hidden_inputs = interfaceUtils.getElementsByClassName("marker-hidden");
+                let hidden_inputs = interfaceUtils.getElementsByClassName("marker-hidden");
                 for(var i = 0; i < hidden_inputs.length; i++){
                     hidden_inputs[i].checked = true;
                 }
