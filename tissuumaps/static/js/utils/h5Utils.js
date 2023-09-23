@@ -55,14 +55,15 @@ export class H5_API {
 
     get (url, payload, action) {
         if (action === undefined) action = "get"; 
+        let urlName;
         function sleep (time) {
             return new Promise((resolve) => setTimeout(resolve, time));
         }
         if (!(typeof url === 'string' || url instanceof String)) {
-            var urlName = url.name;
+            urlName = url.name;
         }
         else {
-            var urlName = url;
+            urlName = url;
         }
         console.log("get:",url, urlName, this.status[urlName]);
         if (this.status[urlName] === undefined) {
