@@ -406,11 +406,11 @@ interfaceUtils.activateMainChildTabs=function(elid){
         return;
     }
     //first, find children ul and then their main children onwards
-    children=document.getElementById(elid).getElementsByTagName("a");
-    maintabids=[];
-    nonmainids=[];
+    let children=document.getElementById(elid).getElementsByTagName("a");
+    let maintabids=[];
+    let nonmainids=[];
     //find the main a and its corresponding panel and activate it.
-    for(var i=0;i<children.length;i++){
+    for(let i=0;i<children.length;i++){
         if(children[i].classList.contains("main-child")){
             maintabids.push(children[i].href.split("#")[1]);
             children[i].classList.add("active")
@@ -422,8 +422,8 @@ interfaceUtils.activateMainChildTabs=function(elid){
 
     //console.log(maintabids,nonmainids)
     
-    for(var i=0;i<maintabids.length;i++){
-        var elem=document.getElementById(maintabids[i]);
+    for(let i=0;i<maintabids.length;i++){
+        let elem=document.getElementById(maintabids[i]);
         if(elem)
             elem.classList.add("active")
         else{
@@ -431,8 +431,8 @@ interfaceUtils.activateMainChildTabs=function(elid){
         }
     }
 
-    for(var i=0;i<nonmainids.length;i++){
-        var elem=document.getElementById(nonmainids[i]);
+    for(let i=0;i<nonmainids.length;i++){
+        let elem=document.getElementById(nonmainids[i]);
         if(elem)
             elem.classList.remove("active")
         else{
@@ -481,7 +481,7 @@ interfaceUtils.hideTabsExcept = function (a) {
     for (var i = 0; i < uls.length; i++) {
         var ulsas = uls[i].getElementsByTagName("a");
         for (var j = 0; j < ulsas.length; j++) {
-            ana=ulsas[j].href.split("#")[1];
+            let ana=ulsas[j].href.split("#")[1];
             if(!ana.includes(elid)){
                 //only turn non elids
                 as.push(ana)
@@ -1985,7 +1985,7 @@ interfaceUtils._mGenUIFuncs.groupUI=async function(uid, force){
         check0.checked = lastCheckAll != null ? lastCheckAll.checked : true;
         td0.appendChild(check0);
         check0.addEventListener("input",(event)=>{
-            clist = interfaceUtils.getElementsByClassName(uid+"-marker-input");
+            let clist = interfaceUtils.getElementsByClassName(uid+"-marker-input");
             for (var i = 0; i < clist.length; ++i) { clist[i].checked = event.target.checked; }
         });
         var label1=HTMLElementUtils.createElement({"kind":"label","extraAttributes":{"for":uid+"_all_check","class":"cursor-pointer"}});
@@ -2088,7 +2088,7 @@ interfaceUtils._mGenUIFuncs.groupUI=async function(uid, force){
                 countShape=countShape % favouriteShapes.length;
             }else if(_selectedOptions["shape_gr_dict"]){
                 try {
-                    val = JSON.parse(_selectedDropDown["shape_gr_dict"].value)[tree["treeID"]];
+                    let val = JSON.parse(_selectedDropDown["shape_gr_dict"].value)[tree["treeID"]];
                     if (val !== undefined) {
                         shapeinput2.value=val;
                     }
@@ -2120,7 +2120,7 @@ interfaceUtils._mGenUIFuncs.groupUI=async function(uid, force){
                 thecolor=HTMLElementUtils.determinsticHTMLColor(escapedID);
             }else if(_selectedOptions["cb_gr_dict"]){
                 try {
-                    colorObject = JSON.parse(_selectedDropDown["cb_gr_dict"].value)
+                    let colorObject = JSON.parse(_selectedDropDown["cb_gr_dict"].value)
                     if (Array.isArray(colorObject)) {
                         thecolor=colorObject[countColor % colorObject.length];
                         countColor += 1;
@@ -2232,7 +2232,7 @@ interfaceUtils._mGenUIFuncs.groupUI=async function(uid, force){
 
 interfaceUtils.updateColorDict = function(uid) {
     var data_obj = dataUtils.data[uid];
-    jsonDict = {};
+    let jsonDict = {};
     for(let i in data_obj["_groupgarden"]){
         var tree = data_obj["_groupgarden"][i]
         var escapedID=tree["treeID"].replace(/ /g,"_");
@@ -2248,7 +2248,7 @@ interfaceUtils.updateColorDict = function(uid) {
 
 interfaceUtils.updateShapeDict = function(uid) {
     var data_obj = dataUtils.data[uid];
-    jsonDict = {};
+    let jsonDict = {};
     for(let i in data_obj["_groupgarden"]){
         var tree = data_obj["_groupgarden"][i]
         var escapedID=tree["treeID"].replace(/ /g,"_");
@@ -2480,7 +2480,7 @@ interfaceUtils.createDownloadDropdown = function(downloadRow, innerText, callbac
         selectDiv.setAttribute("class", "col-12");
     }
     row.appendChild(selectDiv);
-    random_select2_id = (Math.random() + 1).toString(36).substring(7);
+    let random_select2_id = (Math.random() + 1).toString(36).substring(7);
     var paramSelect = {
         // eventListeners: {"change":callback},
         // "class": "btn btn-primary",
@@ -2547,22 +2547,22 @@ interfaceUtils.createDownloadDropdownMarkers = function(options) {
     if (!options.uid)
         options.uid=interfaceUtils._mGenUIFuncs.ctx.aUUID;
     var callback = function(e){
-        params = e.params;
+        let params = e.params;
         if (e) {
             if ($('.select2-select').not(e.target)) {
                 $('.select2-select').not(e.target).val(null).trigger('change');
             }
         }
         projectUtils.applySettings(options.settings);
-        optionsCopy = JSON.parse(JSON.stringify(options));
+        let optionsCopy = JSON.parse(JSON.stringify(options));
         var dataURL = "";
         if (params.data.id === "") {return;}
         if (options.dropdownOptions) {
-            dropdownOption = options.dropdownOptions[params.data.id];
-            for (key in dropdownOption) {
-                option_shifted = optionsCopy;
+            let dropdownOption = options.dropdownOptions[params.data.id];
+            for (let key in dropdownOption) {
+                let option_shifted = optionsCopy;
                 var parameters = key.split(".");
-                for (param_key in parameters) {
+                for (let param_key in parameters) {
                     if (param_key == parameters.length-1) {
                         option_shifted[parameters[param_key]] = dropdownOption[key];
                     }
@@ -2597,8 +2597,9 @@ interfaceUtils.createDownloadDropdownMarkers = function(options) {
             })
         });
     }
-    row = interfaceUtils.createDownloadDropdown(downloadRow, options.title, callback, options.comment, dropdownOptions);
+    let row = interfaceUtils.createDownloadDropdown(downloadRow, options.title, callback, options.comment, dropdownOptions);
     if (options.autoLoad) {
+        let indexLoad;
         if (options.autoLoad === true) {
             indexLoad = 0;
         }
@@ -2661,7 +2662,7 @@ interfaceUtils.createDownloadButtonMarkers = function(options) {
 interfaceUtils.createDownloadDropdownRegions = function(options) {
     var downloadRow = document.getElementById("divRegionsDownloadButtons");
     var callback = function(e){
-        params = e.params
+        let params = e.params
         projectUtils.applySettings(options.settings);
         var dataURL = params.data.id;
         if (dataURL == "") return;
@@ -2709,7 +2710,8 @@ interfaceUtils.addMenuItem = function(itemTree, callback, before) {
         if (!document.getElementById(itemID)) {
             let liItem = HTMLElementUtils.createElement({"kind":"li", "extraAttributes":{"class":"nav-item dropdown"}})
             let aElement;
-            let spanMore
+            let spanMore;
+            let ulItem;
             if (i == 0)
                 rootElement.insertBefore(liItem, document.getElementById("nav-item-title"));
             else if (before)
@@ -2932,13 +2934,13 @@ interfaceUtils._rGenUIFuncs.createTable=function(){
     check0.checked = lastCheckAll != null ? lastCheckAll.checked : true;
     td1.appendChild(check0);
     check0.addEventListener("input",(event)=>{
-        visible = event.target.checked;
-        clist = interfaceUtils.getElementsByClassName("regionUI-region-input");
+        let visible = event.target.checked;
+        let clist = interfaceUtils.getElementsByClassName("regionUI-region-input");
         for (var i = 0; i < clist.length; ++i) { clist[i].checked_eye = visible; }
-        groupRegions = Object.values(regionUtils._regions)
-        for (region of groupRegions) {
+        let groupRegions = Object.values(regionUtils._regions)
+        for (let region of groupRegions) {
             region.visibility = visible;
-        };
+        }
         glUtils.updateRegionLUTTextures();
         glUtils.draw();
         /*let newVisibility = this.checked;
@@ -3019,17 +3021,17 @@ interfaceUtils._rGenUIFuncs.createTable=function(){
             const color = Object.values(regionUtils._regions).find(
                 x => x.regionClass==newClass
             )?.polycolor;
-            groupRegions = Object.values(regionUtils._regions).filter(
+            let groupRegions = Object.values(regionUtils._regions).filter(
                 x => x.regionClass==regionClass
             );
-            for (region of groupRegions) {
+            for (let region of groupRegions) {
                 const escapedRegionID = HTMLElementUtils.stringToId(region.id);
                 if (document.getElementById(escapedRegionID + "_class_ta"))
                     document.getElementById(escapedRegionID + "_class_ta").value = newClass;
                 regionUtils.changeRegion(region.id);
                 region.regionClass = newClass;
                 if (color) {region.polycolor = color;}
-            };
+            }
             regionUtils.updateAllRegionClassUI();
         });td2.appendChild(regionclasstext);
 
@@ -3058,15 +3060,15 @@ interfaceUtils._rGenUIFuncs.createTable=function(){
         });
         regioncolorinput.addEventListener('change', function () {
             var newColor = this.value;
-            groupRegions = Object.values(regionUtils._regions).filter(
+            let groupRegions = Object.values(regionUtils._regions).filter(
                 x => x.regionClass==regionClass
             )
-            for (region of groupRegions) {
+            for (let region of groupRegions) {
                 region.polycolor = newColor;
                 if (document.getElementById(region.id + "_color_input"))
                     document.getElementById(region.id + "_color_input").value = newColor;
                 regionUtils.changeRegion(region.id);
-            };
+            }
             regionUtils.updateAllRegionClassUI();
         });
         var tdPanel = HTMLElementUtils.createElement({
@@ -3086,7 +3088,7 @@ interfaceUtils._rGenUIFuncs.createTable=function(){
             groupRegions = Object.values(regionUtils._regions).filter(
                 x => x.regionClass==regionClass
             );
-            for (region of groupRegions) {
+            for (let region of groupRegions) {
                 region.visibility = visible;
             };
             glUtils.updateRegionLUTTextures();
