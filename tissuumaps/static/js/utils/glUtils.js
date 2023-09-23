@@ -949,6 +949,7 @@ glUtils.loadMarkers = function(uid, forceUpdate) {
                     const markerIndex = i + offset;
                     const lutIndex = (keyName != null) ? barcodeToLUTIndex[markerData[keyName][markerIndex]] : 0;
                     const opacity = useOpacityFromMarker ? markerData[opacityPropertyName][markerIndex] : 1.0;
+                    let scalarValue;
                     if (useCollectionItemFromMarker) collectionItemIndex = markerData[collectionItemPropertyName][markerIndex];
 
                     if (useColorFromMarker) hexColor = markerData[colorPropertyName][markerIndex];
@@ -2382,7 +2383,7 @@ glUtils.restoreLostContext = function(event) {
     }
 
     // Restore per-layer WebGL objects for drawing regions
-    for (let key in Objects.keys(glUtils._textures)) {
+    for (let key in Object.keys(glUtils._textures)) {
         // Check all named texture objects to be safe, since the regions
         // a texture was created for might have been deleted or moved to a
         // different image layer (been assigned a different collectionIndex)
