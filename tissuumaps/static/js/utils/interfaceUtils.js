@@ -2163,7 +2163,7 @@ interfaceUtils._mGenUIFuncs.groupUI=async function(uid, force){
         eventnames = ["mouseenter"];
         eventnames.forEach(function(eventname) {
             button1.addEventListener("mouseenter",function(event) {
-                tr = this.parentElement.parentElement;
+                let tr = this.parentElement.parentElement;
                 tr.classList.add("table-primary");
                 let hidden_inputs = interfaceUtils.getElementsByClassName("marker-hidden");
                 for(var i = 0; i < hidden_inputs.length; i++){
@@ -2179,9 +2179,9 @@ interfaceUtils._mGenUIFuncs.groupUI=async function(uid, force){
         eventnames = ["mouseleave"];
         eventnames.forEach(function(eventname){
             button1.addEventListener(eventname,function(event) {
-                tr = this.parentElement.parentElement;
+                let tr = this.parentElement.parentElement;
                 tr.classList.remove("table-primary");
-                hidden_inputs = interfaceUtils.getElementsByClassName("marker-hidden");
+                let hidden_inputs = interfaceUtils.getElementsByClassName("marker-hidden");
                 for(var i = 0; i < hidden_inputs.length; i++){
                     hidden_inputs[i].checked = false;
                 }
