@@ -31,11 +31,11 @@ pluginUtils.startPlugin = function (pluginID, options) {
         if (!window[pluginID]) {
             interfaceUtils.alert(`Impossible to load plugins/${pluginID}.js file.`);return
         }
-        pluginTitle = window[pluginID]["name"];
+        let pluginTitle = window[pluginID]["name"];
         if (!pluginTitle)
             pluginTitle = pluginID;
         
-        pluginDiv = interfaceUtils.addPluginAccordion(pluginID, pluginTitle);
+        let pluginDiv = interfaceUtils.addPluginAccordion(pluginID, pluginTitle);
         if (window[pluginID].parameters !== undefined) {
             pluginUtils.loadParameters(pluginID, pluginDiv, window[pluginID].parameters);
         }
@@ -134,7 +134,7 @@ pluginUtils.loadParameters = function (pluginID, pluginDiv, parameters) {
             continue;
         }
         else if (parameter.type == "label") {
-            row0=HTMLElementUtils.createElement({
+            let row0=HTMLElementUtils.createElement({
                 id: parameterID,
                 "kind":"p",
                 "extraAttributes":{"class":""}
@@ -148,7 +148,7 @@ pluginUtils.loadParameters = function (pluginID, pluginDiv, parameters) {
             continue;
         }
         else if (parameter.type == "button") {
-            button11 = HTMLElementUtils.createButton({
+            let button11 = HTMLElementUtils.createButton({
                 id: parameterID,
                 extraAttributes: {
                     class: "btn btn-secondary btn-sm",
