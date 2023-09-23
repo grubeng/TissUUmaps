@@ -72,13 +72,15 @@ customElementUtils.textInputSelect = function (
   div.appendChild(list);
 
   // Detect changes in the option list and add click handlers to the options
-  observer = new MutationObserver(function (mutationsList, observer) {
+  let observer = new MutationObserver(function (mutationsList, observer) {
+    // To be removed if not needed
+    console.log(mutationsList, observer)
     // Set input value to "null" by default to maintain interoperability with
     // dataUtils.js dropdown data retrieval logic and checks
     if (input.value === "") {
       input.value = "null";
     }
-    for (child in list.children) {
+    for (let child in list.children) {
       list.children[child].onclick = function () {
         input.value = this.value;
         list.style.display = "none";
@@ -101,7 +103,7 @@ customElementUtils.textInputSelect = function (
   document.body.addEventListener("click", (event) => {
     if (!div.contains(event.target)) {
       list.style.display = "none";
-      for (child in list.children) {
+      for (let child in list.children) {
         if (!list.children[child].style) continue;
         list.children[child].style.display = "block";
       }
@@ -113,7 +115,7 @@ customElementUtils.textInputSelect = function (
     if (input.value === "null") input.value = "";
     list.style.display = "block";
     list.style.width = input.clientWidth + "px";
-    for (child in list.children) {
+    for (let child in list.children) {
       if (!list.children[child].classList) continue;
       if (
         !Array.from(list.children[child].classList)?.includes("active-option")
@@ -150,7 +152,7 @@ customElementUtils.textInputSelect = function (
       list.style.width = input.clientWidth + "px";
     }
     const text = input.value.toLowerCase().trim();
-    for (child in list.children) {
+    for (let child in list.children) {
       if (list.children[child].value?.toLowerCase().trim().includes(text)) {
         list.children[child].style.display = "block";
       } else {
