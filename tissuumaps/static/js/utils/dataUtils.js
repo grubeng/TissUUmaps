@@ -95,7 +95,6 @@ dataUtils.startCSVcascade= function(event){
 /**
  * @deprecated Not required anymore, but kept for backwards-compatibility
  */
-// eslint-disable-next-line no-unused-vars
 let CPDataUtils={};
 
 
@@ -188,7 +187,6 @@ dataUtils.getAllH5Data = async function(data_id, alldrops){
     for (let drop_index in namesymbols) {
         let drop = namesymbols[drop_index];
         console.log(drop_index);
-        // eslint-disable-next-line no-unused-vars
         getH5Data(drop).then(function(data) {
             dataLoaded += 1;
             let perc=100 * dataLoaded / namesymbols.length;
@@ -197,7 +195,6 @@ dataUtils.getAllH5Data = async function(data_id, alldrops){
         });
     }
     // Wait until all data is loaded:
-    // eslint-disable-next-line no-constant-condition
     while (true) {
         await new Promise(r => setTimeout(r, 100));
         if (dataLoaded == namesymbols.length) return;
@@ -237,7 +234,6 @@ dataUtils.getAllH5Data = async function(data_id, alldrops){
         
         var p = Promise.resolve();
         if (data_obj._filetype == "h5" && reloadH5) {
-            // eslint-disable-next-line no-unused-vars
             p = await dataUtils.getAllH5Data(data_id);
         }
 
@@ -260,13 +256,11 @@ dataUtils.getAllH5Data = async function(data_id, alldrops){
             }
         }
         if (recompute_background_img) {
-            // eslint-disable-next-line no-inner-declarations
             function getMax(arr) {
                 let len = arr.length; let max = -Infinity;
                 while (len--) { max = +arr[len] > max ? +arr[len] : max; }
                 return max;
             }
-            // eslint-disable-next-line no-inner-declarations
             function getMin(arr) {
                 let len = arr.length; let min = Infinity; 
                 while (len--) { min = +arr[len] < min ? +arr[len] : min; }
@@ -306,7 +300,6 @@ dataUtils.getAllH5Data = async function(data_id, alldrops){
             else {
                 tmapp["ISS_viewer"].addTiledImage ({
                     tileSource: {
-                        // eslint-disable-next-line no-unused-vars
                         getTileUrl: function(z, x, y){return null},
                         height: parseInt(maxY*1.06),
                         width:  parseInt(maxX*1.06),
@@ -452,7 +445,6 @@ dataUtils.getAllH5Data = async function(data_id, alldrops){
         progressBar.style.width = "100%";
         progressParent.classList.add("d-none");
     } catch (error) {
-        // eslint-disable-next-line no-control-regex
         let stack = error.stack.replace(new RegExp("\n","g"),"<br>");
         interfaceUtils.alert("Error while updating view: <br><pre><code>"+stack+"</code></pre>");
     }
@@ -528,7 +520,6 @@ dataUtils.readH5 = function(data_id, thecsv, options) {
     progressBar.style.width = "0%";
     
     let url = thecsv;
-    // eslint-disable-next-line no-unused-vars
     dataUtils._hdf5Api.get(url,{path:"/"}).then((data) => {
         progressBar.style.width = "100%";
         progressParent.classList.add("d-none");
@@ -614,7 +605,6 @@ dataUtils.readCSV = function(data_id, thecsv, options) {
         if (op == "progress") {
             if (totalSize == undefined) {
                 fakeProgress += 1;
-                // eslint-disable-next-line no-loss-of-precision
                 let perc=Math.min(100, 100*(1-Math.exp(-fakeProgress/100.)));
                 perc=perc.toString()+"%";
                 progressBar.style.width = perc;
@@ -634,7 +624,6 @@ dataUtils.readCSV = function(data_id, thecsv, options) {
     
     let rawdata = { columns: [], isnan: [], data: [], tmp: [] };
     console.time("Load CSV");
-    // eslint-disable-next-line no-undef
     Papa.parse(thecsv, {
         download: (options != undefined),
         delimiter: ",",
@@ -648,7 +637,6 @@ dataUtils.readCSV = function(data_id, thecsv, options) {
                     rawdata.isnan[i] = false;
                     rawdata.data[i] = [];
                 }
-                // eslint-disable-next-line no-unused-vars
                 rawdata.tmp = rawdata.columns.map(x => []);
             } else {
                 // Check so that we are not processing an incomplete row
@@ -666,13 +654,11 @@ dataUtils.readCSV = function(data_id, thecsv, options) {
                         rawdata.data[i].push(rawdata.isnan[i] ? rawdata.tmp[i]
                                                               : new Float64Array(rawdata.tmp[i]));
                     }
-                    // eslint-disable-next-line no-unused-vars
                     rawdata.tmp = rawdata.columns.map(x => []);  // Clear buffers
                     updateProgressBar("progress", row.meta.cursor);
                 }
             }
         },
-        // eslint-disable-next-line no-unused-vars
         complete: function(result) {
             if (rawdata.tmp.length > 0 && rawdata.tmp[0].length > 0) {
                 // Push content of temporary buffers to output arrays
@@ -680,7 +666,6 @@ dataUtils.readCSV = function(data_id, thecsv, options) {
                     rawdata.data[i].push(rawdata.isnan[i] ? rawdata.tmp[i]
                                                           : new Float64Array(rawdata.tmp[i]));
                 }
-                // eslint-disable-next-line no-unused-vars
                 rawdata.tmp = rawdata.columns.map(x => []);  // Clear buffers
             }
             updateProgressBar("load");
@@ -724,7 +709,6 @@ dataUtils.makeQuadTrees = function(data_id) {
     var data_obj = dataUtils.data[data_id];
 
     //get x and Y from inputs
-    // eslint-disable-next-line no-unused-vars
     var inputs=interfaceUtils._mGenUIFuncs.getTabDropDowns(data_id);
     var xselector=data_obj["_X"]
     var yselector=data_obj["_Y"]
@@ -758,7 +742,6 @@ dataUtils.makeQuadTrees = function(data_id) {
     if (dataUtils._quadtreesEnabled) console.time("Generate quadtrees");
     let treeKey;
     if (groupByCol) {
-        // eslint-disable-next-line no-undef
         var allgroups = d3.nest().key(function (d) { return markerData[groupByCol][d]; }).entries(indexData);
 
         data_obj["_groupgarden"] = {};
@@ -824,7 +807,6 @@ dataUtils._quadtreeAdd = function(tree, x, y, d, maxDepth, useArrayLeaves) {
         leaf = {data: d},
         x0 = tree._x0, y0 = tree._y0,
         x1 = tree._x1, y1 = tree._y1,
-        // eslint-disable-next-line no-unused-vars
         xm, ym, xp, yp,
         right, bottom, i;
 
@@ -836,9 +818,7 @@ dataUtils._quadtreeAdd = function(tree, x, y, d, maxDepth, useArrayLeaves) {
     // Find leaf node location at maxDepth level and allocate new nodes
     // for the path in the tree
     for (let depth = 0; depth < maxDepth; ++depth) {
-        // eslint-disable-next-line no-cond-assign
         if (right = x >= (xm = (x0 + x1) / 2)) x0 = xm; else x1 = xm;
-        // eslint-disable-next-line no-cond-assign
         if (bottom = y >= (ym = (y0 + y1) / 2)) y0 = ym; else y1 = ym;
         i = bottom << 1 | right;
 
@@ -901,7 +881,6 @@ dataUtils._quadtreeSize = function(tree) {
     let size = 0;
     if (dataUtils._quadtreesEnabled && dataUtils._quadtreesMethod == 2) {
         tree.visit(function(node) {
-            // eslint-disable-next-line no-cond-assign
             if (!node.length) do size += node.data.length; while (node = node.next)
         });
     } else {
