@@ -11,6 +11,20 @@ var Feature_Space;
 Feature_Space = {
   name: "Feature_Space Plugin",
   parameters: {
+    _display: {
+      label: "Display Feature Space",
+      type: "button",
+    },
+    _info: {
+      label: "Hold shift to draw a region around markers",
+      type: "label",
+    },
+    _advancedSection: {
+      label: "",
+      title: "ADVANCED OPTIONS",
+      type: "section",
+      collapsed: true,
+    },
     _refresh: {
       label: "Refresh plugin based on loaded markers",
       type: "button",
@@ -36,14 +50,6 @@ Feature_Space = {
       label: "Select Histogram Key",
       type: "select",
     },
-    _display: {
-      label: "Display Feature Space",
-      type: "button",
-    },
-    _info: {
-      label: "Hold shift to draw a region around markers",
-      type: "label",
-    },
   },
   _region: null,
   _regionPixels: null,
@@ -57,6 +63,12 @@ Feature_Space.init = function (container) {
   var script = document.createElement("script");
   script.src = "https://cdn.plot.ly/plotly-2.9.0.min.js";
   document.head.appendChild(script);
+
+  glUtils.temp_draw_trigger = glUtils.draw;
+  glUtils.draw = function () {
+    glUtils.temp_draw_trigger();
+    Feature_Space.inputTrigger("_refresh");
+  };
   Feature_Space.inputTrigger("_refresh");
 };
 
@@ -75,7 +87,7 @@ Feature_Space.inputTrigger = function (parameterName) {
     });
     interfaceUtils.addObjectsToSelect(
       Feature_Space.getInputID("_dataset"),
-      datasets
+      datasets,
     );
     var event = new Event("change");
     interfaceUtils
@@ -96,21 +108,21 @@ Feature_Space.inputTrigger = function (parameterName) {
     interfaceUtils.cleanSelect(Feature_Space.getInputID("_UMAP1"));
     interfaceUtils.addElementsToSelect(
       Feature_Space.getInputID("_UMAP1"),
-      dataUtils.data[Feature_Space.get("_dataset")]._csv_header
+      dataUtils.data[Feature_Space.get("_dataset")]._csv_header,
     );
     interfaceUtils.cleanSelect(Feature_Space.getInputID("_UMAP2"));
     interfaceUtils.addElementsToSelect(
       Feature_Space.getInputID("_UMAP2"),
-      dataUtils.data[Feature_Space.get("_dataset")]._csv_header
+      dataUtils.data[Feature_Space.get("_dataset")]._csv_header,
     );
     interfaceUtils.cleanSelect("_histoKey");
     interfaceUtils.addElementsToSelect(
       Feature_Space.getInputID("_histoKey"),
-      dataUtils.data[Feature_Space.get("_dataset")]._csv_header
+      dataUtils.data[Feature_Space.get("_dataset")]._csv_header,
     );
     if (
       dataUtils.data[Feature_Space.get("_dataset")]._csv_header.indexOf(
-        "umap_0"
+        "umap_0",
       ) > 0
     ) {
       Feature_Space.set("_UMAP1", "umap_0");
@@ -118,7 +130,7 @@ Feature_Space.inputTrigger = function (parameterName) {
     }
     if (
       dataUtils.data[Feature_Space.get("_dataset")]._csv_header.indexOf(
-        "umap_1"
+        "umap_1",
       ) > 0
     ) {
       Feature_Space.set("_UMAP2", "umap_1");
@@ -126,33 +138,33 @@ Feature_Space.inputTrigger = function (parameterName) {
     }
     if (
       dataUtils.data[Feature_Space.get("_dataset")]._csv_header.indexOf(
-        dataUtils.data[Feature_Space.get("_dataset")]._gb_col
+        dataUtils.data[Feature_Space.get("_dataset")]._gb_col,
       ) > 0
     ) {
       Feature_Space.set(
         "_histoKey",
-        dataUtils.data[Feature_Space.get("_dataset")]._gb_col
+        dataUtils.data[Feature_Space.get("_dataset")]._gb_col,
       );
       Feature_Space.inputTrigger("_histoKey");
     }
     if (dataUtils.data[Feature_Space.get("_dataset")]._filetype == "h5") {
       select311 = interfaceUtils._mGenUIFuncs.intputToH5(
         Feature_Space.get("_dataset"),
-        interfaceUtils.getElementById(Feature_Space.getInputID("_UMAP1"))
+        interfaceUtils.getElementById(Feature_Space.getInputID("_UMAP1")),
       );
       select411 = interfaceUtils._mGenUIFuncs.intputToH5(
         Feature_Space.get("_dataset"),
-        interfaceUtils.getElementById(Feature_Space.getInputID("_UMAP2"))
+        interfaceUtils.getElementById(Feature_Space.getInputID("_UMAP2")),
       );
       select711 = interfaceUtils._mGenUIFuncs.intputToH5(
         Feature_Space.get("_dataset"),
-        interfaceUtils.getElementById(Feature_Space.getInputID("_histoKey"))
+        interfaceUtils.getElementById(Feature_Space.getInputID("_histoKey")),
       );
       Feature_Space.set("_UMAP1", "/obsm/X_umap;0");
       Feature_Space.set("_UMAP2", "/obsm/X_umap;1");
       Feature_Space.set(
         "_histoKey",
-        dataUtils.data[Feature_Space.get("_dataset")]._gb_col
+        dataUtils.data[Feature_Space.get("_dataset")]._gb_col,
       );
       select311.addEventListener("change", (event) => {
         Feature_Space.set("_UMAP1", select311.value);
@@ -175,24 +187,24 @@ async function copyDataset(dataIn, dataOut) {
       umap0: interfaceUtils.getElementById(Feature_Space.getInputID("_UMAP1")),
       umap1: interfaceUtils.getElementById(Feature_Space.getInputID("_UMAP2")),
       Feature_Space_histoKey: interfaceUtils.getElementById(
-        Feature_Space.getInputID("_histoKey")
+        Feature_Space.getInputID("_histoKey"),
       ),
     };
     await dataUtils.getAllH5Data(Feature_Space.get("_dataset"), allinputs);
   }
   var headers = interfaceUtils._mGenUIFuncs.getTabDropDowns(
-    Feature_Space.get("_dataset")
+    Feature_Space.get("_dataset"),
   );
   dataOut["expectedHeader"] = Object.assign(
     {},
-    ...Object.keys(headers).map((k) => ({ [k]: headers[k].value }))
+    ...Object.keys(headers).map((k) => ({ [k]: headers[k].value })),
   );
   var radios = interfaceUtils._mGenUIFuncs.getTabRadiosAndChecks(
-    Feature_Space.get("_dataset")
+    Feature_Space.get("_dataset"),
   );
   dataOut["expectedRadios"] = Object.assign(
     {},
-    ...Object.keys(radios).map((k) => ({ [k]: radios[k].checked }))
+    ...Object.keys(radios).map((k) => ({ [k]: radios[k].checked })),
   );
   dataOut["expectedHeader"]["X"] = Feature_Space._UMAP1;
   dataOut["expectedHeader"]["Y"] = Feature_Space._UMAP2;
@@ -228,13 +240,16 @@ Feature_Space.run = async function () {
   if (Feature_Space_Control) {
     Feature_Space.clear();
   }
-
+  if (!dataUtils.data[Feature_Space.get("_dataset")]) {
+    interfaceUtils.alert("No marker dataset loaded");
+    return;
+  }
   if (dataUtils.data[Feature_Space.get("_dataset")]._filetype == "h5") {
     let allinputs = {
       umap0: interfaceUtils.getElementById(Feature_Space.getInputID("_UMAP1")),
       umap1: interfaceUtils.getElementById(Feature_Space.getInputID("_UMAP2")),
       Feature_Space_histoKey: interfaceUtils.getElementById(
-        Feature_Space.getInputID("_histoKey")
+        Feature_Space.getInputID("_histoKey"),
       ),
     };
     await dataUtils.getAllH5Data(Feature_Space.get("_dataset"), allinputs);
@@ -289,19 +304,19 @@ Feature_Space.run = async function () {
         "canvas-press",
         (event) => {
           Feature_Space.pressHandler(event, Feature_Space._newwin, window);
-        }
+        },
       );
       Feature_Space._newwin.tmapp["ISS_viewer"].addHandler(
         "canvas-release",
         (event) => {
           Feature_Space.releaseHandler(event, Feature_Space._newwin, window);
-        }
+        },
       );
       Feature_Space._newwin.tmapp["ISS_viewer"].addHandler(
         "canvas-drag",
         (event) => {
           if (event.originalEvent.shiftKey) event.preventDefaultAction = true;
-        }
+        },
       );
       Feature_Space._newwin.tmapp["ISS_viewer"].addHandler(
         "animation-finish",
@@ -313,7 +328,7 @@ Feature_Space.run = async function () {
               $(this).attr(
                 "stroke-width",
                 (2 * regionUtils._polygonStrokeWidth) /
-                  Feature_Space._newwin.tmapp["ISS_viewer"].viewport.getZoom()
+                  Feature_Space._newwin.tmapp["ISS_viewer"].viewport.getZoom(),
               );
             });
           Feature_Space._newwin.d3
@@ -323,7 +338,7 @@ Feature_Space.run = async function () {
               $(this).attr(
                 "r",
                 (10 * regionUtils._handleRadius) /
-                  Feature_Space._newwin.tmapp["ISS_viewer"].viewport.getZoom()
+                  Feature_Space._newwin.tmapp["ISS_viewer"].viewport.getZoom(),
               );
             });
           Feature_Space._newwin.d3
@@ -332,10 +347,10 @@ Feature_Space.run = async function () {
               $(this).attr(
                 "stroke-width",
                 (2 * regionUtils._polygonStrokeWidth) /
-                  Feature_Space._newwin.tmapp["ISS_viewer"].viewport.getZoom()
+                  Feature_Space._newwin.tmapp["ISS_viewer"].viewport.getZoom(),
               );
             });
-        }
+        },
       );
 
       new OpenSeadragon.MouseTracker({
@@ -362,7 +377,7 @@ Feature_Space.run = async function () {
               $(this).attr(
                 "stroke-width",
                 (2 * regionUtils._polygonStrokeWidth) /
-                  tmapp["ISS_viewer"].viewport.getZoom()
+                  tmapp["ISS_viewer"].viewport.getZoom(),
               );
             });
           d3.selectAll(".region_UMAP")
@@ -371,24 +386,24 @@ Feature_Space.run = async function () {
               $(this).attr(
                 "r",
                 (10 * regionUtils._handleRadius) /
-                  tmapp["ISS_viewer"].viewport.getZoom()
+                  tmapp["ISS_viewer"].viewport.getZoom(),
               );
             });
           d3.selectAll(".region_UMAP").each(function (el) {
             $(this).attr(
               "stroke-width",
               (2 * regionUtils._polygonStrokeWidth) /
-                tmapp["ISS_viewer"].viewport.getZoom()
+                tmapp["ISS_viewer"].viewport.getZoom(),
             );
           });
-        }
+        },
       );
 
       /*newwin.projectUtils._activeState = JSON.parse(
         JSON.stringify(projectUtils._activeState)
       );*/
       newwin.projectUtils._activeState["markerFiles"] = JSON.parse(
-        JSON.stringify(projectUtils._activeState["markerFiles"])
+        JSON.stringify(projectUtils._activeState["markerFiles"]),
       );
       newwin.tmapp["ISS_viewer"].close();
 
@@ -406,12 +421,12 @@ Feature_Space.run = async function () {
       newwin.dataUtils.data[Feature_Space.get("_dataset")] = {};
       copyDataset(
         dataUtils.data[Feature_Space.get("_dataset")],
-        newwin.dataUtils.data[Feature_Space.get("_dataset")]
+        newwin.dataUtils.data[Feature_Space.get("_dataset")],
       ).then(() => {
         newwin.dataUtils.createMenuFromCSV(
           Feature_Space.get("_dataset"),
           newwin.dataUtils.data[Feature_Space.get("_dataset")]["_processeddata"]
-            .columns
+            .columns,
         );
         let main_button = newwin.document.getElementById("ISS_collapse_btn");
         main_button.classList.add("d-none");
@@ -446,7 +461,7 @@ Feature_Space.run = async function () {
               newwin = Feature_Space._newwin;
               copyDataset(
                 dataUtils.data[Feature_Space.get("_dataset")],
-                newwin.dataUtils.data[Feature_Space.get("_dataset")]
+                newwin.dataUtils.data[Feature_Space.get("_dataset")],
               ).then(() => {
                 $(
                   "." +
@@ -457,7 +472,7 @@ Feature_Space.run = async function () {
                     Feature_Space.get("_dataset") +
                     "-marker-color, ." +
                     Feature_Space.get("_dataset") +
-                    "-marker-shape"
+                    "-marker-shape",
                 )
                   .each(function (i, elt) {
                     newwin.document.getElementById(elt.id).value = elt.value;
@@ -487,28 +502,28 @@ Feature_Space.run = async function () {
             dataUtils.updateViewOptions = function (
               data_id,
               force_reload_all,
-              reloadH5
+              reloadH5,
             ) {
               newwin.tmapp["ISS_viewer"].world.removeAll();
               dataUtils.temp_updateViewOptions(
                 data_id,
                 force_reload_all,
-                reloadH5
+                reloadH5,
               );
               copyDataset(
                 dataUtils.data[Feature_Space.get("_dataset")],
-                newwin.dataUtils.data[Feature_Space.get("_dataset")]
+                newwin.dataUtils.data[Feature_Space.get("_dataset")],
               ).then(() => {
                 newwin.dataUtils.createMenuFromCSV(
                   Feature_Space.get("_dataset"),
                   newwin.dataUtils.data[Feature_Space.get("_dataset")][
                     "_processeddata"
-                  ].columns
+                  ].columns,
                 );
                 newwin.dataUtils.updateViewOptions(
                   data_id,
                   force_reload_all,
-                  reloadH5
+                  reloadH5,
                 );
               });
             };
@@ -527,9 +542,10 @@ Feature_Space.run = async function () {
   });
 
   Feature_Space_Control.classList.add("d-none");
+  let separator = window.location.href.includes("?") ? "&" : "?";
   Feature_Space_Control.setAttribute(
     "src",
-    window.location.href.replace(/#.*$/, "") + "&tmap=null"
+    window.location.href.replace(/#.*$/, "") + separator + "tmap=null",
   );
 };
 
@@ -585,7 +601,7 @@ Feature_Space.releaseHandler = function (event, win, mainwin) {
     .attr(
       "stroke-width",
       (2 * regionUtils._polygonStrokeWidth) /
-        win.tmapp["ISS_viewer"].viewport.getZoom()
+        win.tmapp["ISS_viewer"].viewport.getZoom(),
     )
     .style("stroke", "#ff0000")
     .style("fill", "none");
@@ -599,7 +615,7 @@ Feature_Space.releaseHandler = function (event, win, mainwin) {
   var markerData =
     win.dataUtils.data[Feature_Space.get("_dataset")]["_processeddata"];
   markerData[scalePropertyName] = new Float64Array(
-    markerData[win.dataUtils.data[Feature_Space.get("_dataset")]["_X"]].length
+    markerData[win.dataUtils.data[Feature_Space.get("_dataset")]["_X"]].length,
   );
   var opacityPropertyName = "UMAP_Region_opacity";
   win.dataUtils.data[Feature_Space.get("_dataset")]["_opacity_col"] =
@@ -607,28 +623,28 @@ Feature_Space.releaseHandler = function (event, win, mainwin) {
   dataUtils.data[Feature_Space.get("_dataset")]["_opacity_col"] =
     opacityPropertyName;
   markerData[opacityPropertyName] = new Float64Array(
-    markerData[win.dataUtils.data[Feature_Space.get("_dataset")]["_X"]].length
+    markerData[win.dataUtils.data[Feature_Space.get("_dataset")]["_X"]].length,
   );
   markerData[opacityPropertyName] = markerData[opacityPropertyName].map(
     function () {
       return 0.15;
-    }
+    },
   );
   markerData[scalePropertyName] = markerData[scalePropertyName].map(
     function () {
       return 0.3;
-    }
+    },
   );
   if (pointsIn.length == 0) {
     markerData[scalePropertyName] = markerData[scalePropertyName].map(
       function () {
         return 1;
-      }
+      },
     );
     markerData[opacityPropertyName] = markerData[opacityPropertyName].map(
       function () {
         return 1;
-      }
+      },
     );
   }
   for (var d of pointsIn) {
@@ -677,7 +693,7 @@ Feature_Space.moveHandler = function (event, win, mainwin) {
   if (Feature_Space._regionPixels.length > 1) {
     dis = distance(
       Feature_Space._regionPixels[Feature_Space._regionPixels.length - 1],
-      Feature_Space._regionPixels[Feature_Space._regionPixels.length - 2]
+      Feature_Space._regionPixels[Feature_Space._regionPixels.length - 2],
     );
     if (dis < 5) {
       Feature_Space._regionPixels.pop();
@@ -701,13 +717,13 @@ Feature_Space.moveHandler = function (event, win, mainwin) {
       "points",
       Feature_Space._region.map(function (x) {
         return [x.x, x.y];
-      })
+      }),
     )
     .style("fill", "none")
     .attr(
       "stroke-width",
       (2 * regionUtils._polygonStrokeWidth) /
-        win.tmapp["ISS_viewer"].viewport.getZoom()
+        win.tmapp["ISS_viewer"].viewport.getZoom(),
     )
     .attr("stroke", "#ff0000")
     .attr("class", "region_UMAP");
@@ -729,22 +745,22 @@ Feature_Space.analyzeRegion = function (points, win) {
   var x0 = Math.min(
     ...points.map(function (x) {
       return x.x;
-    })
+    }),
   );
   var y0 = Math.min(
     ...points.map(function (x) {
       return x.y;
-    })
+    }),
   );
   var x3 = Math.max(
     ...points.map(function (x) {
       return x.x;
-    })
+    }),
   );
   var y3 = Math.max(
     ...points.map(function (x) {
       return x.y;
-    })
+    }),
   );
   var xselector = options.xselector;
   var yselector = options.yselector;
@@ -755,7 +771,7 @@ Feature_Space.analyzeRegion = function (points, win) {
 
   var pointInBbox = [
     ...Array(
-      win.dataUtils.data[dataset]["_processeddata"][xselector].length
+      win.dataUtils.data[dataset]["_processeddata"][xselector].length,
     ).keys(),
   ];
   var markerData = win.dataUtils.data[dataset]["_processeddata"];
@@ -775,7 +791,7 @@ Feature_Space.analyzeRegion = function (points, win) {
     const image = win.tmapp["ISS_viewer"].world.getItemAt(LUTindex);
     var viewportCoord = image.imageToViewportCoordinates(
       markerData[xselector][d] * win.dataUtils.data[dataset]._coord_factor,
-      markerData[yselector][d] * win.dataUtils.data[dataset]._coord_factor
+      markerData[yselector][d] * win.dataUtils.data[dataset]._coord_factor,
     );
     if (
       viewportCoord.x < x0 ||
@@ -791,7 +807,7 @@ Feature_Space.analyzeRegion = function (points, win) {
         viewportCoord.x,
         viewportCoord.y,
         regionPath,
-        tmpPoint
+        tmpPoint,
       )
     ) {
       if (Feature_Space._histoKey) {
@@ -845,7 +861,7 @@ Feature_Space.searchTreeForPointsInBbox = function (
   y0,
   x3,
   y3,
-  options
+  options,
 ) {
   if (options.globalCoords) {
     var xselector = options.xselector;
@@ -890,7 +906,7 @@ Feature_Space.getHisto = function () {
     elt.appendChild(histoView);
 
     var Feature_Space_Control = document.getElementById(
-      "Feature_Space_Control"
+      "Feature_Space_Control",
     );
     Feature_Space_Control.style.height = "50%";
     Feature_Space_Control.parentNode.appendChild(elt);
@@ -935,6 +951,6 @@ Feature_Space.getHisto = function () {
         automargin: true,
       },
     },
-    { responsive: true, displayModeBar: false }
+    { responsive: true, displayModeBar: false },
   );
 };

@@ -11,7 +11,7 @@
 let cmap = ["None"].concat(
   dataUtils._d3LUTs.map(function (str, index) {
     return { value: index, innerHTML: str.replace("interpolate", "") };
-  })
+  }),
 );
 
 var Spot_Inspector;
@@ -31,7 +31,7 @@ Spot_Inspector = {
     },
     _layer_format: {
       label:
-        "Layer name format - use <b>{row}</b> and <b>{col}</b> to define dimensions:",
+        "Layer name format - use <b>{row}</b> and <b>{col}</b> to define dimensions. Use {layout-col6} or {layout-row6} to display all layers with the given number of rows or columns:",
       type: "text",
       default: "",
     },
@@ -50,11 +50,16 @@ Spot_Inspector = {
         step: 0.1,
       },
     },
+    _run: {
+      label: "Display Spot Inspector",
+      type: "button",
+    },
     _MarkersSection: {
       label:
         'If you want to visualize markers on top of the image, you need to have a csv column for successive {row} values separated by semi-colons, and a csv column for successive {col} values separated by semi-colons (e.g. "1;2;3;4" and "C;T;G;A" for layers in the format Round1_C.tif',
       title: "MARKER OPTIONS",
       type: "section",
+      collapsed: true,
     },
     _marker_row: {
       label: "Select {row} column of markers",
@@ -75,6 +80,7 @@ Spot_Inspector = {
       label: "Only use these settings if you know what you are doing!",
       title: "ADVANCED SETTINGS",
       type: "section",
+      collapsed: true,
     },
     _importImages: {
       label: "Import folder of images into layers <i>(optional)</i>",
@@ -96,13 +102,16 @@ Spot_Inspector = {
 // Log Scale
 const expScale = d3.scalePow().exponent(Math.E).domain([0, 1]);
 const colorScaleExp = d3.scaleSequential((d) =>
-  d3.interpolateGreys(expScale(1 - d))
+  d3.interpolateGreys(expScale(1 - d)),
 );
 
 d3["LogGreys"] = colorScaleExp;
 dataUtils._d3LUTs.push("LogGreys");
 
 Spot_Inspector.inputTrigger = function (parameterName) {
+  if (parameterName == "_run") {
+    Spot_Inspector.getMatrix();
+  }
   if (parameterName == "_layer_format") {
     $(".Spot_Inspector_overlay").remove();
     $("#ISS_Spot_Inspector_viewer").remove();
@@ -119,7 +128,7 @@ Spot_Inspector.inputTrigger = function (parameterName) {
       .prompt(
         "<i>This will replace all layers of the current project.</i><br/>Give the path format of your images, use * for numbers:",
         "R*_C*.tif",
-        "Import images into layers"
+        "Import images into layers",
       )
       .then((pathFormat) => {
         Spot_Inspector.loadImages(pathFormat);
@@ -146,7 +155,7 @@ Spot_Inspector.init = function (container) {
   cmap = ["None"].concat(
     dataUtils._d3LUTs.map(function (str, index) {
       return { value: index, innerHTML: str.replace("interpolate", "") };
-    })
+    }),
   );
   interfaceUtils.addObjectsToSelect(Spot_Inspector.getInputID("_cmap"), cmap);
   Spot_Inspector.set("_cmap", Spot_Inspector.get("_cmap"));
@@ -156,82 +165,45 @@ Spot_Inspector.init = function (container) {
     interfaceUtils.cleanSelect(marker_row);
     interfaceUtils.addElementsToSelect(
       marker_row,
-      [0].concat(Object.values(dataUtils.data)[0]._csv_header)
+      [0].concat(Object.values(dataUtils.data)[0]._csv_header),
     );
 
     let marker_col = Spot_Inspector.getInputID("_marker_col");
     interfaceUtils.cleanSelect(marker_col);
     interfaceUtils.addElementsToSelect(
       marker_col,
-      [0].concat(Object.values(dataUtils.data)[0]._csv_header)
+      [0].concat(Object.values(dataUtils.data)[0]._csv_header),
     );
 
     let layername = Spot_Inspector.getInputID("_layername");
     interfaceUtils.cleanSelect(layername);
     interfaceUtils.addElementsToSelect(
       layername,
-      [null].concat(Object.values(dataUtils.data)[0]._csv_header)
+      [null].concat(Object.values(dataUtils.data)[0]._csv_header),
     );
 
     if (
       Object.values(dataUtils.data)[0]._csv_header.indexOf(
-        Spot_Inspector.get("_layername")
+        Spot_Inspector.get("_layername"),
       ) > 0
     ) {
       Spot_Inspector.set("_layername", Spot_Inspector.get("_layername"));
     }
     if (
       Object.values(dataUtils.data)[0]._csv_header.indexOf(
-        Spot_Inspector.get("_marker_row")
+        Spot_Inspector.get("_marker_row"),
       ) > 0
     ) {
       Spot_Inspector.set("_marker_row", Spot_Inspector.get("_marker_row"));
     }
     if (
       Object.values(dataUtils.data)[0]._csv_header.indexOf(
-        Spot_Inspector.get("_marker_col")
+        Spot_Inspector.get("_marker_col"),
       ) > 0
     ) {
       Spot_Inspector.set("_marker_col", Spot_Inspector.get("_marker_col"));
     }
   }
-
-  let advancedSectionIndex = 9;
-
-  let advancedSectionElement = document.querySelector(
-    `#plugin-Spot_Inspector div:nth-child(${advancedSectionIndex}) div h6`
-  );
-  advancedSectionElement?.setAttribute("data-bs-toggle", "collapse");
-  advancedSectionElement?.setAttribute("data-bs-target", "#collapse_advanced");
-  advancedSectionElement?.setAttribute("aria-expanded", "false");
-  advancedSectionElement?.setAttribute("aria-controls", "collapse_advanced");
-  advancedSectionElement?.setAttribute(
-    "class",
-    "collapse_button_transform border-bottom-0 p-1 collapsed"
-  );
-  advancedSectionElement?.setAttribute("style", "cursor: pointer;");
-  advancedSectionElement?.setAttribute("title", "Click to expand");
-  let newDiv = document.createElement("div");
-  newDiv.setAttribute("id", "collapse_advanced");
-  newDiv.setAttribute("class", "collapse");
-  $("#plugin-Spot_Inspector").append(newDiv);
-  let advancedSectionSubtitle = document.querySelector(
-    `#plugin-Spot_Inspector div:nth-child(${advancedSectionIndex}) div p`
-  );
-  newDiv.appendChild(advancedSectionSubtitle);
-  for (
-    let indexElement = advancedSectionIndex + 1;
-    indexElement < Object.keys(Spot_Inspector.parameters).length + 1;
-    indexElement++
-  ) {
-    let element = document.querySelector(
-      `#plugin-Spot_Inspector div:nth-child(${advancedSectionIndex + 1})`
-    );
-    newDiv.appendChild(element);
-  }
-
-  //Spot_Inspector.run();
-  setTimeout(() => Spot_Inspector.getMatrix(), 2000);
 };
 
 Spot_Inspector.loadImages = function (pathFormat) {
@@ -240,7 +212,7 @@ Spot_Inspector.loadImages = function (pathFormat) {
 
   subfolder = window.location.pathname.substring(
     0,
-    window.location.pathname.lastIndexOf("/")
+    window.location.pathname.lastIndexOf("/"),
   );
   //subfolder = subfolder.substring(0, subfolder.lastIndexOf('/') + 1);
   const queryString = window.location.search;
@@ -269,7 +241,7 @@ Spot_Inspector.loadImages = function (pathFormat) {
     error: function (data) {
       interfaceUtils.alert(
         data.responseText.replace("\n", "<br/>"),
-        "Error on the plugin's server response"
+        "Error on the plugin's server response",
       );
     },
   });
@@ -338,7 +310,7 @@ Spot_Inspector.run = function () {
       "canvas-click",
       (event) => {
         click_handler(event);
-      }
+      },
     );
   }
 };
@@ -353,7 +325,7 @@ Spot_Inspector.updateLayerFormat = function (doPrompt) {
 
   var difference = patienceDiff(
     escapeRegExp(tmapp.layers[0].name).split(""),
-    escapeRegExp(tmapp.layers[tmapp.layers.length - 1].name).split("")
+    escapeRegExp(tmapp.layers[tmapp.layers.length - 1].name).split(""),
   );
   fieldNames = ["row", "col"];
   var format = difference.lines.reduce(function (a, b) {
@@ -377,17 +349,18 @@ Spot_Inspector.getMarkers = function (bbox) {
   var ymax = ymin + bbox[3]; //OSDviewer.viewport.imageToViewportCoordinates(bbox[3]);
 
   markersInViewportBounds = [];
+  console.log("Get Markers");
   for (dataset in dataUtils.data) {
     var allkeys = Object.keys(dataUtils.data[dataset]["_groupgarden"]);
     for (var codeIndex in dataUtils.data[dataset]["_groupgarden"]) {
       var inputs = interfaceUtils._mGenUIFuncs.getGroupInputs(
         dataset,
-        codeIndex
+        codeIndex,
       );
       var hexColor = "color" in inputs ? inputs["color"] : "#ffff00";
       var visible = "visible" in inputs ? inputs["visible"] : true;
       if (visible) {
-        var newMarkers = regionUtils.searchTreeForPointsInBbox(
+        var pointsInside = regionUtils.searchTreeForPointsInBbox(
           dataUtils.data[dataset]["_groupgarden"][codeIndex],
           xmin,
           ymin,
@@ -398,8 +371,19 @@ Spot_Inspector.getMarkers = function (bbox) {
             xselector: dataUtils.data[dataset]["_X"],
             yselector: dataUtils.data[dataset]["_Y"],
             dataset: dataset,
-          }
+            coordFactor: dataUtils.data[dataset]["_coord_factor"],
+          },
         );
+        var newMarkers = [];
+        var markerData = dataUtils.data[dataset]["_processeddata"];
+        const columns = dataUtils.data[dataset]["_csv_header"];
+        pointsInside.forEach(function (d) {
+          let p = {};
+          for (const key of columns) {
+            p[key] = markerData[key][d];
+          }
+          newMarkers.push(p);
+        });
         newMarkers.forEach(function (m) {
           m.color = hexColor;
           (m.global_X_pos = parseFloat(m[dataUtils.data[dataset]["_X"]])),
@@ -512,7 +496,7 @@ Spot_Inspector.getMatrix = function () {
       "resize",
       function animationFinishHandler(event) {
         Spot_Inspector.moveHandler(event);
-      }
+      },
     );
     Spot_Inspector.animationTimeout = null;
     Spot_Inspector.osd_viewer.addHandler(
@@ -525,7 +509,7 @@ Spot_Inspector.getMatrix = function () {
           tiledImage.immediateRender = true;
         }
         Spot_Inspector.osd_viewer.imageLoaderLimit = 0;
-      }
+      },
     );
     Spot_Inspector.osd_viewer.addHandler(
       "animation-start",
@@ -541,7 +525,7 @@ Spot_Inspector.getMatrix = function () {
             Spot_Inspector.osd_viewer.imageLoaderLimit = 2;
           }, 200);
         }
-      }
+      },
     );
   }
 };
@@ -598,15 +582,15 @@ Spot_Inspector.setFilters = function () {
       if (Spot_Inspector.get("_gamma") != 1) {
         processors.push(
           filterUtils._filters["Gamma"]["filterFunction"](
-            Spot_Inspector.get("_gamma")
-          )
+            Spot_Inspector.get("_gamma"),
+          ),
         );
       }
       if (Spot_Inspector.get("_cmap") != "undefined") {
         processors.push(
           filterUtils._filters["Colormap"]["filterFunction"](
-            parseInt(Spot_Inspector.get("_cmap")) + 1
-          )
+            parseInt(Spot_Inspector.get("_cmap")) + 1,
+          ),
         );
       }
       for (
@@ -617,8 +601,8 @@ Spot_Inspector.setFilters = function () {
         if (filterUtils._filterItems[layer][filterIndex].name != "Color") {
           processors.push(
             filterUtils._filterItems[layer][filterIndex].filterFunction(
-              filterUtils._filterItems[layer][filterIndex].value
-            )
+              filterUtils._filterItems[layer][filterIndex].value,
+            ),
           );
         }
       }
@@ -655,31 +639,54 @@ Spot_Inspector.getCoordinates = function () {
   let layers = tmapp.layers,
     layer_format = Spot_Inspector.get("_layer_format");
 
-  const invert_row_col =
-    layer_format.indexOf("{row}") > layer_format.indexOf("{col}");
-  const regexp_format = new RegExp(
-    layer_format.replace(/\{row\}|\{col\}/g, "(.*)")
-  );
-
   const outputFields = [];
   const kept_layers = [];
-  for (const layer of layers) {
-    const tileCoord = layer["name"].match(regexp_format);
-    if (tileCoord === null) {
-      continue;
+  let layout_col = layer_format.match(/\{layout-col(\d+)\}/);
+  let layout_row = layer_format.match(/\{layout-row(\d+)\}/);
+  if (layout_col) {
+    let nb_col = layout_col[1];
+    for (let layerIndex = 0; layerIndex < layers.length; layerIndex++) {
+      let tileCoordList = [
+        layerIndex % nb_col,
+        Math.floor(layerIndex / nb_col),
+      ];
+      outputFields.push(tileCoordList);
+      kept_layers.push(layers[layerIndex]);
     }
-    kept_layers.push(layer);
-    let tileCoordList;
-    if (invert_row_col) {
-      tileCoordList = Array.from(tileCoord).slice(1);
-    } else {
-      tileCoordList = Array.from(tileCoord).slice(1).reverse(); // Remove the full match (index 0)
+  } else if (layout_row) {
+    let nb_row = layout_row[1];
+    for (let layerIndex = 0; layerIndex < layers.length; layerIndex++) {
+      let tileCoordList = [
+        Math.floor(layerIndex / nb_row),
+        layerIndex % nb_row,
+      ];
+      outputFields.push(tileCoordList);
+      kept_layers.push(layers[layerIndex]);
     }
-    outputFields.push(tileCoordList);
+  } else {
+    const invert_row_col =
+      layer_format.indexOf("{row}") > layer_format.indexOf("{col}");
+    const regexp_format = new RegExp(
+      layer_format.replace(/\{row\}|\{col\}/g, "(.*)"),
+    );
+
+    for (const layer of layers) {
+      const tileCoord = layer["name"].match(regexp_format);
+      if (tileCoord === null) {
+        continue;
+      }
+      kept_layers.push(layer);
+      let tileCoordList;
+      if (invert_row_col) {
+        tileCoordList = Array.from(tileCoord).slice(1);
+      } else {
+        tileCoordList = Array.from(tileCoord).slice(1).reverse(); // Remove the full match (index 0)
+      }
+      outputFields.push(tileCoordList);
+    }
   }
   let rowNames = Array.from(new Set(outputFields.map((fields) => fields[0]))); //.sort();
   let colNames = Array.from(new Set(outputFields.map((fields) => fields[1]))); //.sort();
-  console.log(regexp_format, rowNames, colNames, outputFields);
   outputFields.map((fields) => {
     fields[0] = rowNames.indexOf(fields[0]);
     fields[1] = colNames.indexOf(fields[1]);
@@ -730,7 +737,7 @@ Spot_Inspector.moveHandler = function (event) {
     return;
   }
   var normCoords = tmapp.ISS_viewer.viewport.pointFromPixel(
-    Spot_Inspector.position
+    Spot_Inspector.position,
   );
   var imagePoint = tmapp.ISS_viewer.world
     .getItemAt(0)
@@ -748,7 +755,7 @@ Spot_Inspector.moveHandler = function (event) {
     if (Spot_Inspector.osd_viewer.world.getItemCount() - 1 < layer) break;
 
     let overlay = Spot_Inspector.osd_viewer.getOverlayById(
-      "Spot_Inspector_overlay_" + layer
+      "Spot_Inspector_overlay_" + layer,
     );
     if (!overlay) {
       var elt = document.createElement("div");
@@ -762,10 +769,10 @@ Spot_Inspector.moveHandler = function (event) {
       Spot_Inspector.osd_viewer.addOverlay(
         elt.id,
         position,
-        OpenSeadragon.Placement.TOP
+        OpenSeadragon.Placement.TOP,
       );
       overlay = Spot_Inspector.osd_viewer.getOverlayById(
-        "Spot_Inspector_overlay_" + layer
+        "Spot_Inspector_overlay_" + layer,
       );
     }
 
@@ -775,38 +782,38 @@ Spot_Inspector.moveHandler = function (event) {
         imagePoint.x - patch_width / 2,
         imagePoint.y - patch_width / 2,
         patch_width,
-        patch_width
-      )
+        patch_width,
+      ),
     );
     let x_point_offset = layerCoordinate[0] * (patch_width + margin);
     x_point_offset_max = Math.max(
       x_point_offset_max,
-      x_point_offset + patch_width
+      x_point_offset + patch_width,
     );
     let y_point_offset = layerCoordinate[1] * (patch_width + font_height);
     y_point_offset_max = Math.max(
       y_point_offset_max,
-      y_point_offset + patch_width
+      y_point_offset + patch_width,
     );
     var point = new OpenSeadragon.Point(x_point_offset, y_point_offset);
     tiledImage.setPosition(
       Spot_Inspector.osd_viewer.world
         .getItemAt(0)
         .imageToViewportCoordinates(point),
-      true
+      true,
     );
 
     let label_position = new OpenSeadragon.Rect(
       imagePoint.x - patch_width / 2 + x_point_offset,
       imagePoint.y - patch_width / 2 + y_point_offset - font_height,
       patch_width,
-      font_height
+      font_height,
     );
     overlay.update(
       Spot_Inspector.osd_viewer.world
         .getItemAt(0)
         .imageToViewportRectangle(label_position),
-      OpenSeadragon.Placement.TOP_LEFT
+      OpenSeadragon.Placement.TOP_LEFT,
     );
     tiledImage.setOpacity(100);
   }
@@ -818,10 +825,10 @@ Spot_Inspector.moveHandler = function (event) {
           imagePoint.x - patch_width / 2,
           imagePoint.y - patch_width / 2 - font_height,
           x_point_offset_max,
-          y_point_offset_max + font_height
-        )
+          y_point_offset_max + font_height,
+        ),
       ),
-    true
+    true,
   );
 
   // Change window size:
@@ -829,7 +836,7 @@ Spot_Inspector.moveHandler = function (event) {
   if (ratio > 1) {
     let max_width = Math.min(
       Spot_Inspector.get("_max_width"),
-      document.getElementById("ISS_viewer")?.offsetWidth || 0
+      document.getElementById("ISS_viewer")?.offsetWidth || 0,
     );
     document.getElementById("ISS_Spot_Inspector_viewer").style.width =
       max_width + "px";
@@ -838,7 +845,7 @@ Spot_Inspector.moveHandler = function (event) {
   } else {
     let max_height = Math.min(
       Spot_Inspector.get("_max_width"),
-      document.getElementById("ISS_viewer")?.offsetHeight || 0
+      document.getElementById("ISS_viewer")?.offsetHeight || 0,
     );
     document.getElementById("ISS_Spot_Inspector_viewer").style.width =
       max_height * ratio + "px";
@@ -847,12 +854,12 @@ Spot_Inspector.moveHandler = function (event) {
   }
 
   let overlay = Spot_Inspector.osd_viewer.getOverlayById(
-    "Spot_Inspector_overlay_0"
+    "Spot_Inspector_overlay_0",
   );
   let real_font_size = overlay.size.y / 1.3;
   for (let layer in layers) {
     let overlay = Spot_Inspector.osd_viewer.getOverlayById(
-      "Spot_Inspector_overlay_" + layer
+      "Spot_Inspector_overlay_" + layer,
     );
     if (overlay) overlay.style.fontSize = real_font_size + "px";
   }
@@ -895,7 +902,10 @@ Spot_Inspector.moveHandler = function (event) {
                 Spot_Inspector.get("_line_width"),
             normCoords.y +
               y_point_offset +
-              edges[1] * 0.005 * patch_width * Spot_Inspector.get("_line_width")
+              edges[1] *
+                0.005 *
+                patch_width *
+                Spot_Inspector.get("_line_width"),
           ),
         p2 = Spot_Inspector.osd_viewer.world
           .getItemAt(0)
@@ -908,7 +918,10 @@ Spot_Inspector.moveHandler = function (event) {
                 Spot_Inspector.get("_line_width"),
             normCoords.y +
               y_point_offset +
-              edges[3] * 0.005 * patch_width * Spot_Inspector.get("_line_width")
+              edges[3] *
+                0.005 *
+                patch_width *
+                Spot_Inspector.get("_line_width"),
           );
       let strokeWstr =
         (Spot_Inspector.get("_line_width") * 0.0005) /
@@ -947,8 +960,8 @@ Spot_Inspector.moveHandler = function (event) {
           Math.min(
             1,
             (Math.abs(x - normCoords.x) + Math.abs(y - normCoords.y)) /
-              patch_width
-          )
+              patch_width,
+          ),
         );
     if (
       marker_col.toString().indexOf(";") > -1 &&
@@ -1012,7 +1025,7 @@ Spot_Inspector.moveHandler = function (event) {
                 edges[1] *
                   0.01 *
                   patch_width *
-                  Spot_Inspector.get("_line_width")
+                  Spot_Inspector.get("_line_width"),
             ),
           p2 = Spot_Inspector.osd_viewer.world
             .getItemAt(0)
@@ -1026,7 +1039,7 @@ Spot_Inspector.moveHandler = function (event) {
                 edges[3] *
                   0.01 *
                   patch_width *
-                  Spot_Inspector.get("_line_width")
+                  Spot_Inspector.get("_line_width"),
             );
         let strokeWstr =
           (Spot_Inspector.get("_line_width") * 0.001) /
@@ -1294,7 +1307,7 @@ function patienceDiff(aLines, bLines, diffPlusFlag) {
 
   function recurseLCS(aLo, aHi, bLo, bHi, uniqueCommonMap) {
     const x = longestCommonSubsequence(
-      uniqueCommonMap || uniqueCommon(aLines, aLo, aHi, bLines, bLo, bHi)
+      uniqueCommonMap || uniqueCommon(aLines, aLo, aHi, bLines, bLo, bHi),
     );
 
     if (x.length === 0) {
@@ -1310,7 +1323,7 @@ function patienceDiff(aLines, bLines, diffPlusFlag) {
           x[i].indexA,
           x[i + 1].indexA - 1,
           x[i].indexB,
-          x[i + 1].indexB - 1
+          x[i + 1].indexB - 1,
         );
       }
 
